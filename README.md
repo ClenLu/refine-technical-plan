@@ -30,7 +30,7 @@ Ask Codex to use the skill:
 Use $refine-technical-plan to automatically review, revise, document, and re-review this technical plan until it passes or reaches clear blockers.
 ```
 
-Or paste the prompt template from [`tml.md`](./tml.md) and replace the placeholder with your plan.
+Or paste the prompt template from [`prompt-template.md`](./prompt-template.md) and replace the placeholder with your plan.
 
 ## Repository Structure
 
@@ -44,7 +44,7 @@ Or paste the prompt template from [`tml.md`](./tml.md) and replace the placehold
 │   ├── document-template.md
 │   ├── quality-gates.md
 │   └── review-rubric.md
-└── tml.md
+└── prompt-template.md
 ```
 
 ## License
