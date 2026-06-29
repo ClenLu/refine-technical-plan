@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refine Technical Plan"
+  short_description: "Expert-panel refinement for technical plans"
+  default_prompt: "Use $refine-technical-plan to automatically review, revise, document, and re-review this technical plan until it passes or reaches clear blockers."
