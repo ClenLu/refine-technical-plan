@@ -1,0 +1,14 @@
+name: refine-technical-plan-regression
+version: 2
+purpose: Regression tests for trigger behavior, evidence gates, repository-aware review, external authority, review coverage, owner escalation, continuation packets, reference loading, and implementation conformance.
+case_file: cases.jsonl
+rubric_file: rubric.md
+recommended_sample_size: all
+scoring:
+  max_points_per_case: 10
+  pass_threshold_per_case: 8
+  critical_failures_override: true
+maintenance_notes:
+  - Run after editing SKILL.md, quality gates, repo-aware review, output templates, document templates, examples, or evals.
+  - Add a case for every bug found in real usage.
+  - Keep cases small and focused on one behavioral invariant.

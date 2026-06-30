@@ -1,162 +1,134 @@
 ---
 name: refine-technical-plan
-description: Review and refine technical plans with simulated expert-panel, mandatory repo-aware inspection, evidence ledgers, severity gates, rewrites, stress tests, implementation-readiness, and plan-to-code conformance decisions. Use when asked to 打磨方案, review architecture/refactor/migration/implementation plans, PRD-to-engineering plans, agent-generated proposals, implementation diffs from an approved plan, “方案已经更新”, or multi-round review until safe to proceed.
+description: Review and refine technical plans with simulated expert-panel review, evidence gates, mandatory repo-aware inspection, external freshness/authority checks, review coverage scoring, owner-escalation triggers, multi-round continuation packets, implementation-readiness, and plan-to-code conformance. Use for 打磨方案, architecture/refactor/migration/rollout/integration plans, PRD-to-engineering, AI/agent proposals, updated-plan regression review, or approved-plan implementation diff review.
 ---
 
 # Refine Technical Plan
 
-Use this skill as the primary entrypoint for hardening technical plans before and after implementation. Turn a draft or evolving proposal into a defensible implementation-ready plan through repeated expert-style review, targeted rewrites, mandatory repository-aware evidence checks, stress tests, implementation-readiness gates, and optional plan-to-code conformance review.
+Use this skill to harden technical plans before and after implementation. The goal is not to make a proposal sound persuasive. The goal is to expose hidden assumptions, missing evidence, unsafe boundaries, weak validation, rollback gaps, implementation traps, and long-term technical debt before users or agents act on the plan.
 
-This is a simulated expert-panel review workflow. It does not claim that real external experts participated.
+This workflow simulates an expert-panel review. It must not claim that real external experts participated. When the plan crosses high-risk ownership, compliance, production, security, data, billing, or external-contract boundaries, the workflow must surface the need for real owner or subject-matter-expert confirmation instead of treating simulated review as a substitute.
 
 ## When to Use
 
 Use this skill when the user asks to:
 
-- polish, 打磨, review, revise, or approve a technical plan;
-- review an architecture, refactor, migration, rollout, integration, platform, data, AI/agent, frontend, backend, or implementation plan;
-- convert a PRD or product idea into an engineering plan;
-- check an agent-generated proposal for hidden assumptions, technical debt, missing validation, missing rollback, or unsafe design;
-- review code, config, migration, prompt/tool, tests, docs, or deployment changes produced from an approved plan;
-- run multi-round review until a plan reaches `Pass`, `Pass under assumptions`, `Pass with notes`, `Revise`, or `Blocked`;
-- continue from an updated plan, especially when the user says "方案已经更新".
+- review, refine, polish, revise, stress-test, approve, or harden a technical plan;
+- review an architecture, refactor, migration, rollout, integration, platform, data, AI/agent, frontend, backend, or implementation proposal;
+- convert a PRD, product idea, or rough direction into an engineering plan;
+- check an agent-generated proposal for hidden assumptions, unsupported claims, technical debt, missing validation, missing rollback, or unsafe design;
+- continue reviewing an updated plan and compare it against prior findings;
+- decide whether engineers or coding agents can safely start implementation;
+- review code, config, migration, prompt/tool, tests, docs, or deployment changes produced from an approved plan.
 
-Do not use this skill when the user only asks for direct code implementation, debugging a concrete error, casual explanation, or brainstorming without plan hardening. If the user asks for code after a plan passes, implementation may proceed, but the approved plan's gates become implementation constraints. After code, config, migration, prompt/tool, tests, docs, or deployment changes are produced, run `Implementation Conformance Review` by default unless the user explicitly opts out.
+Do not use this skill for direct implementation, routine debugging, casual explanation, or open-ended brainstorming unless the user wants plan hardening or implementation readiness.
 
-## Defaults
+## Operating Defaults
 
-- Reply in the user's language; use Chinese when the user writes Chinese.
+- Reply in the user's language unless the user asks otherwise; keep canonical decision labels in English.
 - Do not write implementation code unless the user explicitly asks for code.
-- Default to automatic multi-round review and rewrite when enough context exists.
-- Keep one response bounded: run at most 3 review/rewrite cycles per response, then stop with the best current plan and remaining blockers.
-- Continue across conversation turns without a fixed round limit. Do not force `Pass` just to end the loop.
-- Treat the expert panel as a simulated review method, not real external expert endorsement.
-- The user does not need to provide an implementation plan. A rough proposal, architecture idea, PRD, refactor direction, or agent-generated plan is enough. Derive implementation steps only when needed to make the plan executable, testable, and reviewable.
-- In Codex, Claude Code, Cursor Agent, Devin, or any repository-aware coding agent, repository inspection is mandatory before any pass-like or implementation-ready decision.
-- Inspect local docs/code/config/tests when they are available and materially affect the plan.
-- Output inspected paths, commands, or search areas when repository evidence is used.
-- Ask the user last: ask for input only when continuing would require guessing about business constraints, production behavior, external contracts, compliance constraints, operator constraints, or domain-owner facts that cannot reasonably be discovered from the repository.
-
-## References
-
-Use progressive disclosure: load only the reference files needed for the current request.
-
-- Read `references/review-rubric.md` for universal review lenses, change-type lenses, AI/agent lenses, non-expert decision brief guidance, and domain adaptation questions.
-- Read `references/quality-gates.md` for severity definitions, pass/fail gates, evidence rules, approval-to-action semantics, high-risk validation gates, implementation conformance gates, technical debt traps, and slice/direct/hybrid refactor selection.
-- Read `references/domain-packs.md` when the plan clearly involves frontend, backend/API, data/migration, infrastructure/SRE, security/privacy, AI/agent, mobile/desktop, or other specialized engineering domains.
-- Read `references/document-template.md` when the user asks to write or update a plan, implementation-ready plan, ADR-like note, or docs artifact.
+- Use the lightest review mode that satisfies the request.
+- Default to automatic review, rewrite, and re-review when enough context exists.
+- Do not ask the user to manually trigger the next review or rewrite round when enough information exists to continue within the current response.
+- Run at most 3 review/rewrite cycles per response; continue across conversation turns without a fixed round limit.
+- Do not force `Pass` to end the loop. Use `Pass under assumptions`, `Revise`, or `Blocked` when evidence or safety is insufficient.
+- Treat model reasoning as a way to identify risk, not as proof of safety.
+- Ask the user last. Inspect available repository, documents, tests, configs, schemas, and validation artifacts before asking for facts that can be discovered.
+- The user does not need to provide a complete implementation plan. A rough proposal, PRD, architecture idea, refactor direction, or agent-generated plan is enough. Derive only the implementation detail needed to make the plan executable, testable, and reviewable.
+- For repository-aware coding agents, repository inspection is mandatory before material review, rewrite, implementation-readiness, pass-like, or implementation-conformance decisions when repository context is available and material.
+- Do not ask the user for repository-discoverable facts before inspecting available code, docs, schemas, configs, tests, prompts/tools, migrations, CI, and runbooks.
+- When a plan depends on third-party APIs, frameworks, SDKs, cloud services, platform behavior, LLM APIs, security advisories, compliance rules, or provider contracts, verify fresh authoritative sources when possible; otherwise mark the conclusion assumption-backed.
+- For high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions, include a review coverage summary that exposes what was and was not covered.
+- Escalate to a real owner, operator, security/privacy/compliance reviewer, domain SME, or external partner when the escalation triggers in `references/quality-gates.md` apply.
+- After implementation artifacts exist, run implementation conformance review by default unless the user explicitly opts out.
 
 ## Expected Inputs
 
-Minimum input:
+Minimum input is intentionally small. The user may provide any of:
 
-- a plan, proposal, PRD, agent-generated方案, or rough technical direction.
+- rough proposal, PRD, product idea, architecture idea, refactor direction, migration sketch, rollout idea, implementation plan, agent-generated proposal, updated plan, approved plan, implementation diff, or validation artifact.
 
 Helpful context when available:
 
-- repository paths, code areas, docs, schemas, APIs, tests, configs, logs, metrics, rollout constraints, owner constraints, production behavior, or specific concerns from the user.
+- repository paths, code areas, docs, schemas, APIs, prompts/tools, tests, configs, logs, metrics, rollout constraints, owner constraints, production behavior, specific worries, or prior review findings.
 
-Do not require the user to provide everything up front. In repo-aware environments, inspect available artifacts before asking.
+Do not require the user to provide everything up front. In repository-aware environments, inspect available artifacts first and ask the user only for business, production, external-contract, compliance, operator, or owner facts that cannot reasonably be discovered.
 
 ## Review Modes
 
-Select the lightest mode that satisfies the user request:
+Choose one or combine only what is needed:
 
-- Review-only: critique without rewriting.
-- Rewrite: critique, revise, and re-review.
-- Delta review: compare an updated plan against prior blockers and decisions.
-- Document mode: write or update a docs artifact.
-- Implementation-readiness review: decide whether engineers or coding agents can start safely.
-- Implementation-conformance review: compare actual code/config/migration/test/docs changes against an approved plan.
-- Evidence-collection mode: convert missing evidence into concrete repo searches, validation tasks, owner confirmations, or production checks.
-- Validation-evidence review: evaluate test, CI, dry-run, eval, smoke, dashboard, rollback rehearsal, or owner-confirmation artifacts.
-- Pre-implementation risk review: focus only on hidden debt, rollback, validation, and unknowns.
+- `Review-only`: critique without rewriting.
+- `Rewrite`: critique, revise, and re-review.
+- `Delta review`: compare an updated plan against prior findings and decisions.
+- `Document mode`: write or update a durable plan document.
+- `Implementation-readiness review`: decide whether implementation may start and under which constraints.
+- `Evidence-collection mode`: convert missing facts into concrete searches, validations, owner confirmations, or production checks.
+- `Validation-evidence review`: evaluate test, CI, dry-run, smoke, eval, dashboard, rollback rehearsal, or owner-confirmation artifacts.
+- `Implementation-conformance review`: compare actual changes against an approved plan.
+- `Pre-implementation risk review`: focus only on hidden debt, rollback, validation, evidence gaps, and unknowns before implementation starts.
+- `Minimal safe plan`: replace an unsafe proposal with the smallest reversible path that validates the riskiest assumption.
+- `Freshness / external authority review`: verify version-specific external technical facts or mark them assumption-backed.
+- `Review coverage review`: report repository, domain, external-authority, validation, and owner-confirmation coverage before a pass-like decision.
+- `Owner / SME escalation review`: identify decisions that require a real domain owner, operator, security/privacy/compliance reviewer, or external partner.
+
+## Document Mode File Handling
+
+Document mode writes or updates a durable plan artifact only when the user asks for a document, docs update, ADR-like note, or file output.
+
+- If the user provides a target path, update that document.
+- If no path is provided and the user explicitly asks for a file, choose an appropriate path under the repository `docs/` directory and state the chosen path.
+- If the user only asks for a review or plan in chat, return the document content in the response instead of creating a repository file.
+- Keep the final plan primary. Preserve only material decisions, blockers/major findings, accepted risks, rejected options, repository evidence, validation requirements, rollout/rollback, and implementation-conformance requirements.
+
+## Progressive Reference Loading
+
+Load only the references needed for the current request:
+
+- `references/quality-gates.md`: severity, status model, source-of-truth hierarchy, pass/fail rules, approval-to-action semantics, freshness/external authority gate, review coverage score, owner/SME escalation triggers, high-risk validation, accepted risks, and debt traps.
+- `references/review-rubric.md`: universal review lenses, change-type lenses, external technical dependency lens, review coverage questions, evidence questions, adversarial prompts, and non-expert decision guidance.
+- `references/domain-packs.md`: deeper domain checks for frontend, backend, data, infrastructure, security, AI/agent, mobile, developer experience, documentation, external API/platform authority, and high-risk subdomains.
+- `references/repo-aware-review.md`: mandatory repository inspection, repository inspection ledger, ask-user-last policy, and repository-backed confidence rules.
+- `references/implementation-conformance.md`: diff-to-plan review, implementation evidence bundle, validation evidence, release/rollback/cleanup review, and implementation decisions.
+- `references/output-templates.md`: compact, standard, full, evidence-collection, review-coverage, continuation-packet, document-update, and implementation-conformance response templates.
+- `references/document-template.md`: durable plan document structure.
+- `examples/`: calibration examples and good/bad patterns for conditional approval, repository-backed claims, document mode, accepted risk, and implementation conformance. Use for skill maintenance or reviewer calibration, not as templates to copy blindly.
+- `evals/`: regression cases and grading rubrics for maintaining this skill. Use when changing the skill or checking trigger/gate behavior, not during normal user reviews.
+
+
+Reference loading hard rules:
+
+- Before any `Pass`, `Pass with notes`, `Pass under assumptions`, `Revise`, or `Blocked` decision that materially constrains implementation, load or apply `references/quality-gates.md`.
+- Before any repository-backed confidence claim, implementation-readiness decision, or repository-dependent rewrite, load or apply `references/repo-aware-review.md` and list inspected paths, commands, or search terms.
+- Before any implementation-conformance decision, load or apply `references/implementation-conformance.md`; CI or test success alone is not enough.
+- Before high-risk, unfamiliar-domain, non-expert, or conditional-approval output, load or apply `references/output-templates.md` so the allowed/forbidden next action, review coverage, and continuation packet are explicit.
+- When a plan depends on current external technical facts, load or apply the freshness/external authority gate in `references/quality-gates.md` and the relevant domain pack or rubric lens.
+- When the user asks for a durable document or file, load `references/document-template.md` before writing or updating it.
+- Use `examples/` and `evals/` only for skill maintenance, calibration, or regression testing unless the user explicitly asks for examples.
+
+Do not bulk-load every reference, example, or eval file when a compact review is enough.
 
 ## Context Intake
 
-Before review, extract these from the artifact, repository, docs, and prior discussion. Ask only when a missing fact materially changes pass/fail status.
+Before reviewing, extract what is knowable from the artifact, repository, documents, and prior discussion:
 
-- Artifact under review: draft plan, architecture proposal, PRD, code diff, migration plan, docs update, or agent-generated proposal.
-- Change type: new capability, refactor/replacement, migration, integration, runtime/platform, state/data, human workflow, AI/model behavior, documentation/process, or mixed change.
-- Affected surface: users, callers, APIs, events, DTOs, schemas, persisted state, prompts/tools, permissions, jobs, config, deployment, operations, documentation, or support process.
-- Available evidence: plan text, code, docs, schemas, configs, tests, fixtures, logs, metrics, traces, evals, prior discussion, user-provided constraints, or owner confirmations.
-- Repository inspection status: inspected paths, commands/search terms, artifacts not inspected, and why.
-- Implementation state: no implementation yet, partial diff exists, full diff exists, validation artifacts exist, or rollout artifacts exist.
-- Unknowns: missing facts that materially affect design, risk, validation, rollout, or pass/fail status.
-- Blast radius: low, medium, or high.
-- Reversibility: reversible, partially reversible, or irreversible.
+- artifact type: plan, PRD, architecture proposal, migration plan, code diff, rollout plan, docs update, or agent-generated proposal;
+- change type: feature, refactor, migration, integration, platform/runtime, state/data, UI/workflow, AI/agent behavior, documentation/process, or mixed;
+- affected surface: users, callers, APIs, events, DTOs, schemas, storage, prompts/tools, permissions, jobs, config, deployment, observability, documentation, and support process;
+- implementation state: no implementation, partial diff, full diff, validation artifacts, or rollout artifacts;
+- available evidence: plan text, code, docs, schemas, configs, tests, fixtures, logs, metrics, traces, evals, owner confirmations, or production observations;
+- unknowns that materially affect pass/fail status;
+- external technical dependencies and whether current authoritative facts, pinned versions, changelogs, deprecations, security advisories, or compatibility limits are material;
+- real owner, operator, security/privacy/compliance, domain SME, or external partner confirmations needed by escalation triggers;
+- review coverage: repository, domain, external-authority, validation, owner/production, and implementation-conformance coverage;
+- blast radius: low, medium, or high;
+- reversibility: reversible, partially reversible, or irreversible.
 
+Ask for input only when continuing would require guessing about business intent, production behavior, external contracts, compliance, operator constraints, or domain-owner facts that cannot reasonably be discovered.
 
-## Mandatory Repo-Aware Agent Mode
+## Expert Panel Roles
 
-When running inside Codex, Claude Code, Cursor Agent, Devin, or any repository-aware coding agent, repository inspection is mandatory before review, rewrite, implementation-readiness, pass-like, or implementation-conformance decisions.
-
-Do not treat the user-provided plan as the only source of truth. Before reviewing or rewriting the plan, inspect relevant repository context when available and material to the decision:
-
-- existing implementation paths and ownership boundaries;
-- public APIs, events, DTOs, schemas, storage formats, prompts, tools, UI states, CLI behavior, or workflow states;
-- callers, consumers, imports, routes, jobs, workflows, feature flags, config paths, generated code, or integration points;
-- tests, fixtures, snapshots, evals, migration files, seed data, build scripts, and CI-relevant commands;
-- documentation, ADRs, runbooks, deployment files, environment assumptions, and operational procedures;
-- existing error semantics, permission checks, observability, logging, rollback mechanisms, and cleanup conventions.
-
-Use repository evidence to confirm, weaken, or reject the plan's claims. Prefer repository evidence over plan claims when they conflict, and mark the conflict as `Blocker` or `Major` depending on impact.
-
-Do not claim repository-backed confidence, implementation readiness, or safe-to-proceed status unless relevant repository areas were inspected or the uninspected areas are explicitly listed as assumptions.
-
-If the agent cannot inspect the repository because of tool limits, missing checkout, permissions, context-window limits, or unavailable artifacts, mark the decision as assumption-backed rather than repository-backed.
-
-## Repository Inspection Ledger
-
-When repository context is material, include a compact ledger before any pass-like decision. For low-risk docs-only work, this can be compressed to one paragraph.
-
-```markdown
-| Area | Paths / Commands / Search Terms | Why Inspected | Finding | Confidence |
-| --- | --- | --- | --- | --- |
-| Existing implementation |  |  |  | High/Medium/Low |
-| Callers / consumers |  |  |  | High/Medium/Low |
-| Contracts / schemas / prompts / tools |  |  |  | High/Medium/Low |
-| Tests / fixtures / evals |  |  |  | High/Medium/Low |
-| Migrations / data / config |  |  |  | High/Medium/Low |
-| Docs / runbooks / deployment |  |  |  | High/Medium/Low |
-```
-
-Rules:
-
-- Name concrete paths, commands, or search terms where possible, such as `rg "FooService"`, `src/foo/*`, `db/migrations/*`, or `docs/runbooks/*`.
-- Do not write vague claims like "checked the repo" without naming what was checked.
-- If an area is material but uninspected, list it as `Not inspected`, explain why, and treat related conclusions as assumptions.
-- If no repository is available, say so explicitly and do not use repository-backed language.
-
-## Ask-User-Last Policy
-
-In repository-aware coding agents, ask the user only for facts outside the repository or outside available tooling:
-
-- business priority, product intent, or user-experience tradeoff;
-- compliance, policy, legal, security, or privacy owner decision;
-- production incident context, traffic shape, operational constraints, or historical failure not present in logs/docs;
-- external contract or partner behavior not represented in the repo;
-- rollout appetite, accepted-risk owner, or domain-owner approval.
-
-Do not ask the user for facts that can be discovered from the repository, such as file paths, existing API shape, schema fields, caller inventory, test commands, route names, config names, docs, migration files, feature flags, prompt/tool definitions, or current implementation boundaries.
-
-## Domain Pack
-
-After context intake, derive a temporary domain checklist from evidence. Do not assume a domain by default.
-
-Examples of derived checks:
-
-- Human-facing experience: state ownership, loading/error/empty states, accessibility, responsiveness, stale data, user-visible degradation.
-- Service or interface contracts: compatibility, idempotency, authorization, quotas, error semantics, observability, deprecation.
-- State or migration: source of truth, invariants, expand-migrate-contract, backfill, reconciliation, rollback after irreversible changes.
-- Runtime or operations: deployment, config, resource limits, concurrency, startup/shutdown, alerts, runbooks.
-- AI or agent behavior: evals, hallucination containment, prompt injection, tool misuse, human override, auditability, replayability.
-
-If a domain is material and requires deeper checks, load `references/domain-packs.md`. Skip irrelevant checks to avoid cargo-cult review.
-
-## Expert Panel
-
-Simulate a compact expert panel. Use roles to structure critique; do not invent credentials or real people.
+Simulate a compact expert panel to structure critique. Do not invent credentials, real people, or external expert participation.
 
 Always include:
 
@@ -166,475 +138,111 @@ Always include:
 - Reliability/security reviewer: failure modes, data safety, observability, abuse cases.
 - Product/operator representative: user impact, operational burden, rollout clarity.
 
-Add specialized roles only when the plan justifies them: interface/contract, runtime/operations, state/migration, user experience, security/privacy, compliance, performance, cost, platform, AI/model behavior, or developer experience.
+Add specialized roles only when the plan justifies them, such as interface/contract, runtime/operations, state/migration, user experience, security/privacy, compliance, performance, cost, platform, AI/model behavior, or developer experience.
 
-## Reviewer Independence Protocol
+## Core Workflow
 
-Use role separation to reduce self-approval risk.
+1. Select the review mode and output detail level.
+2. Run context intake and inspect available repository evidence when material; in repository-aware coding agents, do this before material review or rewrite when the outcome may constrain implementation.
+3. If repository context matters, produce or update a repository inspection ledger.
+4. Select relevant review lenses and domain packs; skip irrelevant checks.
+5. Simulate a compact expert panel: architecture, domain, implementation, reliability/security, and product/operations. Add specialized roles only when justified.
+6. For automatic multi-round or high-risk review, separate proposal improvement, red-team critique, and gatekeeper decision; do not let the same pass both rewrite and approve without evidence.
+7. Classify findings as `Blocker`, `Major`, `Minor`, or `Accepted Risk`.
+8. Attach evidence, missing evidence, or a concrete failure scenario to every `Blocker` and `Major`.
+9. Resolve expert disagreements explicitly using the disagreement resolution gate; do not average conflicting recommendations.
+10. Apply the freshness/external authority gate when the plan depends on third-party, platform, provider, framework, SDK, LLM/API, security, compliance, or other current external facts.
+11. Apply the real expert / owner escalation trigger when a decision crosses data, security, compliance, billing, public contract, production, operator, or external partner boundaries.
+12. If evidence gaps block or condition approval, output an evidence collection plan.
+13. If the plan is unsafe but the goal is valid, produce a minimal safe plan.
+14. When enough context exists, rewrite the plan and re-review it.
+15. Before any pass-like decision, run adversarial review and a three-scenario pre-pass stress test.
+16. Apply quality gates and approval-to-action semantics.
+17. Produce a review coverage summary for high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions.
+18. Output the decision, allowed next action, non-expert control summary, material findings, final plan or required changes, and next evidence or conformance step.
+19. If the decision is not absolute `Pass`, or if the current response stops after the 3-cycle limit with remaining conditions, output a continuation packet that can be pasted into the next round.
 
-For automatic multi-round review, separate the work into three passes:
+## Decision Labels
 
-1. Proposal pass:
-   - Improve the plan only as the plan author.
-   - Do not approve the plan in this pass.
-2. Red-team pass:
-   - Review the plan as if it was written by another agent.
-   - Look for hidden assumptions, missing evidence, false confidence, over-broad abstractions, and implementation traps.
-   - Do not defend prior decisions.
-3. Gatekeeper pass:
-   - Decide status only from evidence, assumptions, validation, severity rules, and repository facts.
-   - Do not mark `Pass` just because the plan improved.
-   - Do not mark absolute `Pass` when important evidence is missing.
+Use these labels exactly:
 
-For high-risk, irreversible, security-sensitive, data-changing, public-contract, billing, compliance, or production-impacting plans, require repository evidence, validation evidence, or owner confirmation before absolute `Pass`.
+- `Pass`: full implementation may start, with required evidence preserved and conformance review after changes.
+- `Pass with notes`: implementation may start; notes must become tracked tasks or explicit accepted risks.
+- `Pass under assumptions`: only discovery, spike, validation, owner confirmation, or reversible guarded implementation may start until assumptions are verified or accepted.
+- `Revise`: revise the plan or perform targeted risk-reduction work only.
+- `Blocked`: collect evidence, confirm owner/business facts, or reduce scope before continuing.
 
-## Evidence Discipline
-
-Do not treat plausible reasoning as sufficient evidence.
-
-For every `Blocker` or `Major` finding, identify one of:
-
-- exact plan text that creates the risk;
-- repository, documentation, schema, config, test, log, metric, trace, eval, or prior-discussion evidence;
-- missing business, production, external contract, compliance, or domain-owner fact;
-- concrete failure scenario that makes the risk material.
-
-For every `Pass`, `Pass under assumptions`, or `Pass with notes` decision, state whether the decision is:
-
-- evidence-backed;
-- assumption-backed;
-- validation-backed;
-- repository-backed;
-- owner/production-backed when applicable.
-
-Do not mark absolute `Pass` when important contracts, caller inventory, data shape, production behavior, permissions, rollback behavior, business constraints, or compliance constraints are only assumed. Use `Pass under assumptions`, `Revise`, or `Blocked` instead.
+For high-risk plans, `Pass under assumptions` is not approval for irreversible, public-contract, data-changing, security-sensitive, or production-impacting implementation.
 
 
-## Evidence Collection Plan
+Display `Pass under assumptions` as a conditional permission, not as full approval:
 
-When missing evidence blocks or conditions approval, do not keep polishing the plan to hide the gap. Produce an evidence collection plan instead of absolute `Pass`.
+- Implementation permission: **not full implementation approval**.
+- Allowed: discovery, spike, validation, owner confirmation, or reversible guarded work.
+- Forbidden until assumptions are verified or accepted: production rollout, irreversible migration, public contract change, security-sensitive implementation, or high-risk data/state change.
 
-Use this when a `Blocker`, `Major`, high-risk validation gate, repository mismatch, or `Pass under assumptions` depends on missing facts.
-
-```markdown
-| Missing Evidence | Why It Matters | How To Collect | Owner / Source | Decision Impact | Can Implementation Start? |
-| --- | --- | --- | --- | --- | --- |
-| Caller inventory | Breaking contract risk | Search imports/routes/logs/API clients | Repo / API owner | Blocks absolute Pass | Discovery only |
-| Data shape | Migration risk | Schema query/sample/dry-run | DB / data owner | Blocks rollout | No production change |
-| Rollback proof | Recovery risk | Rollback rehearsal/smoke test | Operator / CI | Blocks release | Behind flag only |
-```
-
-Rules:
-
-- Convert each material unknown into a concrete search, validation, owner confirmation, or production check.
-- Separate repo-discoverable evidence from external owner or production facts.
-- If implementation can start only as discovery, spike, or guarded reversible work, say so explicitly.
-- Do not convert unresolved ambiguity into `Accepted Risk` unless it has owner, impact, mitigation, monitoring/validation, trigger, expiry, and reason for acceptance.
-
-
-## Approval-to-Action Semantics
-
-Tie every decision to what a coding agent is allowed to do next.
-
-| Decision | Allowed Next Action | Not Allowed |
-| --- | --- | --- |
-| `Pass` | Full implementation may start; preserve gate evidence and run implementation conformance after changes. | Ignoring validation, rollback, or cleanup evidence. |
-| `Pass with notes` | Implementation may start; notes must become tracked tasks or explicit accepted risks. | Treating minor notes as optional when they protect tests, docs, cleanup, or ownership. |
-| `Pass under assumptions` | Discovery, spike, validation, owner confirmation, or reversible guarded implementation may start. | Full production implementation, irreversible migration, public contract change, or rollout before assumptions are verified or accepted. |
-| `Revise` | Revise plan or perform targeted risk-reduction work only. | Implementing the full plan as if approved. |
-| `Blocked` | Collect evidence, confirm owner/business facts, or reduce scope to a minimal safe plan. | Continuing by guessing or implementing production-impacting work. |
-
-For high-risk plans, `Pass under assumptions` is not implementation approval for irreversible or production-impacting work. It is approval to validate assumptions or do bounded reversible discovery.
-
-## Automatic Review Loop
-
-Use this loop by default unless the user asks for a single round, brainstorming, or discussion without rewriting.
-
-1. Run context intake, inspect relevant repository evidence when available, build the repository inspection ledger, and derive a domain pack.
-2. Run expert review: list the strongest objections, hidden assumptions, debt risks, and ambiguous decisions. Prefer concrete failure scenarios over generic concerns.
-3. Classify findings with severity: `Blocker`, `Major`, `Minor`, or `Accepted Risk`.
-4. Build or update the gate evidence matrix for scope, boundaries, contracts, state/migration, failure behavior, observability, validation, rollout/rollback, security/privacy, and debt control.
-5. If evidence gaps block or condition approval, produce an Evidence Collection Plan.
-6. Resolve expert disagreements explicitly when roles recommend different paths.
-7. Decide status and allowed next action using Approval-to-Action Semantics:
-   - `Blocked`: essential input is missing and continuing would require guessing.
-   - `Revise`: any `Blocker` or unresolved `Major` remains, or the plan would likely create avoidable debt.
-   - `Pass under assumptions`: no blocker or major remains if explicitly listed assumptions hold, but important facts were not independently verified.
-   - `Pass with notes`: only `Minor` issues or explicit `Accepted Risk` items remain.
-   - `Pass`: the plan is evidence-backed, repository-backed, validation-backed, or owner-confirmed as needed; coherent; scoped; testable; observable; and ready to implement.
-8. If status is `Revise` and enough context exists, rewrite the plan. Preserve good decisions, remove obsolete text, and directly address blockers and major findings.
-9. Re-review the rewritten plan. Track whether earlier concerns were resolved, weakened, still open, or replaced by new risks.
-10. Before final `Pass`, `Pass under assumptions`, or `Pass with notes`, run adversarial review and the pre-pass stress test.
-11. Stop when the status is `Pass`, `Pass under assumptions`, `Pass with notes`, `Blocked`, or after 3 cycles in the current response.
-
-Do not ask the user to manually trigger the next round when enough information exists to continue.
-
-## Disagreement Resolution
-
-When expert roles disagree, do not average the opinions.
-
-Resolve disagreement by:
-
-1. naming the conflicting recommendations;
-2. identifying which risk or invariant each role is protecting;
-3. comparing blast radius, reversibility, validation strength, delivery complexity, and long-term debt;
-4. choosing one path explicitly;
-5. recording rejected options and accepted risks.
-
-## Adversarial Review
-
-Before final rewrite or any pass-like decision, run a short red-team pass:
-
-- What assumption would invalidate the plan?
-- What hidden coupling could make implementation unsafe?
-- What temporary compatibility path could become permanent debt?
-- What test would falsely pass while production still breaks?
-- What would a future maintainer misunderstand?
-- What rollback path only works in theory but not after data, state, or external behavior changes?
-- What user, caller, or operator impact is easy to miss because the plan is written from the implementer's perspective?
-- What would an agent hallucinate because the plan lacks concrete contracts?
-- What evidence would most quickly prove the plan wrong?
-
-Use adversarial review to strengthen the final plan, not to create endless critique.
-
-## Pre-Pass Stress Test
-
-Before marking `Pass`, `Pass under assumptions`, or `Pass with notes`, run at least three concrete failure scenarios:
-
-1. Most likely failure.
-2. Most expensive or user-visible failure.
-3. Hardest-to-detect technical-debt failure.
-
-For each scenario, state:
-
-- trigger;
-- affected user, caller, component, or data;
-- detection signal;
-- mitigation;
-- rollback or cleanup path;
-- whether the final plan handles it.
-
-## Validation Evidence Mode
-
-When the user provides validation artifacts, use them to upgrade or downgrade the decision.
-
-Validation artifacts may include test results, CI logs, migration dry-run output, contract test output, screenshots or recordings, eval result summaries, load/performance results, smoke check output, dashboard or alert screenshots, rollback rehearsal evidence, production observation, or domain owner confirmation.
-
-For each artifact, state:
-
-- what claim it validates;
-- what it does not validate;
-- whether remaining risk changes severity;
-- whether the decision changes.
-
-Do not treat a validation plan as validation evidence. A plan that says "we will test this" is not validation-backed until results are provided.
-
-
-## Implementation Conformance Review
-
-Use after code, config, migration, prompt/tool, tests, docs, or deployment changes are produced from an approved plan. This mode is mandatory by default after an agent implements a previously approved plan unless the user explicitly opts out.
-
-Compare the approved plan against the actual diff and validation artifacts. Do not approve implementation merely because the code compiles or tests pass.
-
-Required checks:
-
-- Map changed files to the approved plan sections, gates, or accepted risks they satisfy.
-- Identify any unplanned APIs, schemas, files, routes, permissions, configs, prompts, tools, migrations, jobs, side effects, public behavior, or operational procedures.
-- Verify the implementation preserves approved boundaries, contracts, validation requirements, rollout/rollback, observability, cleanup triggers, and accepted-risk owners.
-- Verify tests target the real production/user/contract/migration/security/AI-agent risk, not merely the lines the agent changed.
-- Verify validation evidence exists or is explicitly still pending.
-- Verify temporary adapters, feature flags, dual paths, compatibility shells, facades, prompts, eval fixtures, queues, dashboards, or runbooks have owner, metric/signal, and deletion or review trigger.
-- Identify implementation shortcuts that create new debt not reviewed in the plan.
-
-Decision outcomes:
-
-- `Implementation Pass`: implementation matches the approved plan; required tests/evidence are present or appropriately deferred by accepted risk.
-- `Implementation Pass under assumptions`: implementation matches the plan, but material validation, owner confirmation, or production evidence is still pending.
-- `Revise implementation`: implementation deviates from the plan, lacks required tests/evidence, or introduces unreviewed debt.
-- `Implementation Blocked`: essential implementation evidence is unavailable or the diff cannot be reviewed safely.
-
-Output shape:
-
-```markdown
-**Implementation Conformance Decision**
-- 结论：Implementation Pass | Implementation Pass under assumptions | Revise implementation | Implementation Blocked
-- 是否可以合并/发布：是 / 否 / 仅在验证完成后
-- 一句话原因：...
-
-**Diff-to-Plan Mapping**
-| Changed Area / File | Approved Plan Section / Gate | Match? | Evidence | Notes |
-| --- | --- | --- | --- | --- |
-
-**Unplanned Changes**
-| Change | Risk | Severity | Required Action |
-| --- | --- | --- | --- |
-
-**Validation Evidence Check**
-| Required Evidence | Actual Artifact | Result | Remaining Gap |
-| --- | --- | --- | --- |
-
-**Release / Rollback / Cleanup Check**
-- Rollout preserved: ...
-- Rollback still credible: ...
-- Observability present: ...
-- Cleanup trigger present: ...
-```
-
-## Multi-Round Continuity
+## Continuity Across Turns
 
 Maintain a compact review ledger across turns:
 
-- Prior conclusion.
-- Open blockers and major findings.
-- Resolved blockers and how they were resolved.
-- Accepted risks and owners/triggers.
-- Changed decisions since the previous round.
-- Rejected options and why.
-- New risks introduced by the latest revision.
+- prior conclusion;
+- stable issue IDs for material findings, such as `B-001`, `M-001`, `A-001`, `E-001`, and `R-001`;
+- open blockers and major findings;
+- resolved findings and how they were resolved;
+- accepted risks, owners, triggers, and expiry conditions;
+- changed decisions and rejected options;
+- evidence that changed the conclusion;
+- continuation packet from the prior response, if present.
 
-## Regression Review
-
-When the user says "方案已经更新" or similar, run regression review before new critique:
-
-| Prior Finding | Previous Severity | Current Status | Evidence | New Severity |
-| --- | --- | --- | --- | --- |
-| ... | Blocker/Major | Resolved/Partial/Open/Regressed | ... | ... |
-
-Do not introduce new critique before checking prior blockers unless the new plan materially changes scope.
-
-## Approval Standard
-
-Use `references/quality-gates.md` for detailed gates. At minimum, only pass when all of these are true:
-
-- Scope is explicit: what changes, what does not change, and what is deferred.
-- Architecture boundaries are clear: ownership, dependencies, public contracts, data flow, and side effects are named.
-- Migration is safe: rollout, compatibility, rollback, cleanup, and user/data impact are covered when relevant.
-- Validation is credible: unit, integration, contract, migration, manual, observability, eval, smoke, and acceptance checks match the risk.
-- Debt is controlled: shortcuts are deliberate, documented, owned, and bounded by follow-up triggers.
-- Failure behavior is explicit: timeout, retry, partial failure, idempotency, degradation, and error semantics are covered where relevant.
-- The plan can be executed by an engineer or coding agent unfamiliar with the discussion history.
-- Important pass/fail conclusions are tied to plan evidence, repository evidence, validation evidence, owner confirmation, or explicitly listed assumptions.
-- If implementation has already been produced, actual changes conform to the approved plan or deviations are reviewed and resolved.
-
-## Minimal Safe Plan
-
-If the proposed plan is unsafe but the goal is valid and enough context exists, produce the smallest safe path that:
-
-- avoids irreversible changes;
-- preserves existing contracts until migration is proven;
-- validates the riskiest assumption early;
-- includes rollback or cleanup;
-- avoids long-lived compatibility debt.
-
-## Implementation Readiness Score
-
-When useful, provide an optional readiness score after the gate decision.
-
-Format:
-
-- Implementation Readiness: 0-100
-- Confidence: Low / Medium / High
-- Reason:
-  - Evidence strength:
-  - Repository alignment:
-  - Remaining assumptions:
-  - Validation strength:
-  - Rollback strength:
-  - Debt risk:
-  - External confirmation needed:
-
-Suggested interpretation:
-
-- 90-100: implementation can start; remaining work is minor or explicitly accepted.
-- 70-89: implementation can start only with listed assumptions, validation tasks, or owner confirmations.
-- 40-69: revise before implementation; meaningful design, validation, rollout, or evidence gaps remain.
-- 0-39: blocked or unsafe; implementation would likely create failure or debt.
-
-Do not let the score override severity rules. A plan with unresolved `Blocker` or `Major` cannot become `Pass` because the score is high.
-
-## Document Mode
-
-Document mode is an output mode of this skill, not a separate responsibility. Use it when the user asks to write, update, supplement, or place a plan in `docs`.
-
-In document mode:
-
-- Load `references/document-template.md`.
-- Update the requested document if a path is provided; otherwise choose an appropriate file under the repository `docs/` directory only when the user asks for a file.
-- Keep the final plan primary and review history concise.
-- Include background, context intake, repository inspection ledger, assumptions/evidence/unknowns, evidence collection plan when needed, goals/non-goals/success criteria, target design, domain pack, alternatives, chosen plan, implementation steps when relevant, validation plan, validation evidence when available, rollout/rollback, approval-to-action semantics, gate evidence matrix, accepted risks, implementation readiness, implementation conformance record when applicable, and material expert review record when relevant.
-- Do not preserve every intermediate critique. Preserve only decisions changed by review, blockers/major findings, accepted risks, and why rejected alternatives were rejected.
-
-## Decision-First Output
-
-For users likely outside the domain, start with a short decision layer before technical details.
-
-Default order:
-
-1. Decision:
-   - `Pass`, `Pass under assumptions`, `Pass with notes`, `Revise`, or `Blocked`.
-   - Whether implementation can start.
-   - One-sentence reason.
-2. Non-expert control summary:
-   - Top 3 things to watch.
-   - Red lines that must not be accepted.
-   - Questions that require real owner, code, production, or business confirmation.
-   - Evidence a later agent or engineer must preserve.
-3. Technical review:
-   - Severity findings.
-   - Gate evidence matrix.
-   - Rewritten plan.
-   - Stress test.
-   - Remaining risks.
-
-For simple or low-risk plans, compress expert discussion and show only material findings. For high-risk plans, keep the full gate matrix and stress test.
-
-## Output Shapes
-
-
-For automatic multi-round reviews:
+Output a `Continuation Packet` when the review is `Revise`, `Blocked`, `Pass under assumptions`, or when material evidence remains open after the current response limit:
 
 ```markdown
-**决策摘要**
-- 结论：Pass | Pass under assumptions | Pass with notes | Revise | Blocked
-- 是否可以开始实现：是 / 否 / 仅允许 discovery/spike/验证/owner 确认 / 仅在假设成立或指定验证完成后
-- 允许的下一步：...
-- 不允许的下一步：...
-- 一句话原因：...
-- 当前最大风险：...
-
-**给非该领域用户的判断摘要**
-- 最应该盯住的 3 个点：...
-- 不能接受的红线：...
-- 可以接受的权衡：...
-- 需要真实负责人确认的问题：...
-- 后续实现必须保留的验收证据：...
-
-**Repository Inspection Ledger**
-| Area | Paths / Commands / Search Terms | Why Inspected | Finding | Confidence |
-| --- | --- | --- | --- | --- |
-
-**自动审核轮次**
-- Round 1: <finding summary> -> <change made>
-- Round 2: <finding summary> -> <change made>
-- Round 3: <final gate result>
-
-**严重级别分类**
-| Severity | Finding | Evidence / Assumption | Required Change | Status |
-| --- | --- | --- | --- | --- |
-| Blocker/Major/Minor/Accepted Risk |  |  |  | Open/Resolved/Accepted |
-
-**Evidence Collection Plan**
-| Missing Evidence | Why It Matters | How To Collect | Owner / Source | Decision Impact | Can Implementation Start? |
-| --- | --- | --- | --- | --- | --- |
-
-**证据矩阵**
-| Gate | Evidence / Assumption / Validation | Status |
-| --- | --- | --- |
-| Scope | ... | Pass/Revise/N/A |
-| Boundary | ... | Pass/Revise/N/A |
-| Contracts | ... | Pass/Revise/N/A |
-| State/Migration | ... | Pass/Revise/N/A |
-| Failure behavior | ... | Pass/Revise/N/A |
-| Observability | ... | Pass/Revise/N/A |
-| Validation | ... | Pass/Revise/N/A |
-| Rollout/Rollback | ... | Pass/Revise/N/A |
-| Security/Privacy | ... | Pass/Revise/N/A |
-| Technical debt control | ... | Pass/Revise/N/A |
-
-**最终方案**
-<polished plan>
-
-**Adversarial Review / Pre-Pass Stress Test**
-- <failure scenario and whether the plan handles it>
-
-**Implementation Readiness**
-- Score: <0-100>
-- Confidence: Low/Medium/High
-- Reason: ...
-
-**Implementation Conformance Requirement**
-- After implementation, run conformance review: Yes/No and why
-- Evidence the implementation must preserve: ...
-
-**剩余风险**
-- <Minor or Accepted Risk items, or "无阻断风险">
-
-**通过条件 / 下一步**
-- <condition, evidence collection task, implementation next step, or conformance review step>
+**Continuation Packet**
+- Current decision: Pass / Pass with notes / Pass under assumptions / Revise / Blocked
+- Implementation permission: Full implementation / Tracked notes only / Discovery only / No implementation
+- Open blockers: B-...
+- Open majors: M-...
+- Open assumptions or evidence gaps: A-... / E-...
+- Required evidence or owner confirmation: ...
+- Do not change: decisions, constraints, or accepted risks that remain binding
+- Next review mode: Review-only / Rewrite / Delta review / Evidence-collection / Validation-evidence / Implementation-conformance
+- Paste this into the next agent or next round: ...
 ```
 
-For single-round reviews:
+When reviewing an updated plan, check prior blockers and major findings before introducing new critique. Do not rename an unresolved issue to make it appear resolved.
 
-```markdown
-**结论**
-Revise | Pass under assumptions | Pass with notes | Pass | Blocked
+## Output Policy
 
-**专家讨论**
-- Architecture: ...
-- Domain: ...
-- Implementation: ...
-- Reliability/Security: ...
-- Product/Operations: ...
+Start with a decision layer for users who may be outside the domain:
 
-**必须修正**
-- [Blocker/Major] <finding> (Evidence/Assumption: ...)
+1. decision and whether implementation can start;
+2. allowed and forbidden next actions;
+3. top risks and red lines;
+4. evidence or owner confirmations required;
+5. review coverage and biggest blind spot when risk is material;
+6. technical findings and rewritten plan;
+7. implementation-conformance requirement if later code or changes will be produced;
+8. continuation packet when the decision is conditional, blocked, or revise-only.
 
-**建议优化**
-- [Minor] ...
+Use compact output for low-risk plans. Use full output for high-risk, unfamiliar-domain, repository-backed, data-changing, security-sensitive, public-contract, production-impacting, external-dependency-sensitive, or agent-generated implementation plans. In non-expert contexts, never hide conditionality behind the word `Pass`; state the implementation permission explicitly.
 
-**通过条件**
-- ...
-```
+## Hard Rules
 
-For optimized plans:
+- If the user asks for implementation after a pass-like decision, treat the approved plan's gates, accepted risks, validation requirements, rollout/rollback, cleanup, and implementation-conformance requirements as binding implementation constraints.
+- Do not treat a polished rewrite as proof that the design is safe.
+- Do not claim repository-backed confidence without inspected paths, commands, or search terms.
+- Do not treat a validation plan as validation evidence.
+- Do not accept vague phrases such as `improve architecture`, `enhance validation`, `standardize`, `decouple`, or `handle edge cases` unless the concrete mechanism, boundary, invariant, or test is named.
+- Do not add ceremony, abstraction, process, or rollout complexity that does not reduce a named risk.
+- Do not require local validation beyond what the risk justifies; for docs-only planning, specify validation strategy instead of pretending tests were run.
+- Do not convert unresolved ambiguity into `Accepted Risk` without owner, impact, mitigation, monitoring or validation, trigger, expiry, and reason for acceptance.
+- Do not let temporary adapters, feature flags, facades, dual paths, prompts, eval fixtures, queues, dashboards, or runbooks remain without owner, metric or signal, and deletion or review trigger.
+- Do not skip implementation conformance review after agent-generated changes unless explicitly told to skip it.
 
-```markdown
-**目标**
-...
-
-**非目标**
-...
-
-**核心方案**
-...
-
-**实施阶段**
-1. ...
-2. ...
-
-**验证与验收**
-...
-
-**风险与回滚**
-...
-
-**证据、假设与未知项**
-...
-
-**遗留问题**
-...
-```
-
-For document updates, update the document first, then respond with:
-
-```text
-已更新：<path>
-结论：Pass/Pass under assumptions/Pass with notes/Revise/Blocked
-主要变化：
-- <change>
-剩余风险：
-- <risk or "无阻断风险">
-```
-
-## Review Discipline
-
-- Do not accept vague phrases such as "enhance validation", "improve architecture", or "handle edge cases" unless the plan names the concrete mechanism.
-- Do not assume a web, backend, frontend, data, infrastructure, AI, or product domain unless the artifact or project evidence supports it.
-- Do not add ceremony that does not reduce risk.
-- Do not over-index on incremental slicing. Slicing is useful when it reduces risk; direct refactor is reasonable when the old boundary is the debt source and compatibility, rollback, and acceptance checks are credible.
-- Do not require local validation beyond what the risk justifies. For docs-only planning, specify validation strategy instead of running tests.
-- Do not claim certainty when the conclusion depends on assumptions. Mark those assumptions and use `Pass under assumptions`, `Revise`, or `Blocked`.
-- Do not bulk-load every reference file. Load only what the current review needs.
-- Do not claim repository-backed confidence without a repository inspection ledger or explicit explanation of why repo inspection was unavailable.
-- Do not let `Pass under assumptions` authorize irreversible, public-contract, data-changing, security-sensitive, or production-impacting implementation.
-- Do not skip implementation conformance review after agent-generated code unless the user explicitly opts out.
+- Before any pass-like decision that materially constrains implementation, apply `references/quality-gates.md`; do not rely on the main skill text alone.
+- Before repository-backed confidence, apply `references/repo-aware-review.md`; before implementation conformance, apply `references/implementation-conformance.md`.
+- Do not issue absolute `Pass` for material third-party/framework/platform/provider/API/security/compliance claims when current official evidence, pinned-version evidence, or owner-confirmed evidence is missing.
+- Do not treat simulated expert-panel review as a substitute for a real owner, operator, security/privacy/compliance reviewer, domain SME, or external partner when escalation triggers apply.
+- For high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions, include review coverage and the biggest blind spot.
+- Do not present `Pass under assumptions` as permission for full implementation; state allowed and forbidden work explicitly.
+- Do not omit the continuation packet when a review ends with open blockers, majors, assumptions, evidence gaps, owner confirmations, or the current response stops before absolute `Pass`.
