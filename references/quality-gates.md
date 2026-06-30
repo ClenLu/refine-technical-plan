@@ -1,178 +1,261 @@
 # Expert Plan Quality Gates
 
-Use these gates to decide whether a software engineering plan can pass expert-style review. These gates are designed to prevent false confidence when a user is relying on an agent outside their own domain.
+Use these gates to decide whether a software engineering plan, or an implementation produced from an approved plan, can pass expert-style review.
 
 ## Severity
 
-- `Blocker`: The plan is likely to fail, create severe technical debt, break users, expose data, or cannot be implemented safely without resolving this.
-- `Major`: The plan may work but leaves meaningful ambiguity, delivery risk, operational risk, compatibility risk, security/privacy risk, or maintainability debt.
+- `Blocker`: The plan is likely to fail, create severe technical debt, break users, corrupt data/state, violate security/privacy/compliance expectations, or cannot be implemented safely without resolving this.
+- `Major`: The plan may work but leaves meaningful ambiguity, delivery risk, operational risk, evidence gaps, repository mismatch, external dependency risk, or maintainability debt.
 - `Minor`: Useful improvement that should not block implementation.
-- `Accepted Risk`: A known tradeoff with explicit owner, impact, mitigation, reason for acceptance, and review/removal trigger.
+- `Accepted Risk`: A known tradeoff with explicit owner, impact, mitigation, validation or monitoring path, trigger/expiry, and reason for acceptance.
 
-## Decision Outcomes
+## Status Model
 
-- `Pass`: No blocker or major issue remains; material claims are evidence-backed or validation-backed; the plan is executable by someone without the prior discussion.
-- `Pass under assumptions`: No blocker or major issue remains if the explicitly listed assumptions are true, but one or more important facts were not independently verified.
-- `Pass with notes`: Only minor issues or explicit accepted risks remain.
-- `Revise`: At least one blocker or major issue remains, or the plan is likely to create avoidable technical debt.
-- `Blocked`: Essential input is unavailable and further refinement would require unsafe guessing.
+- `Pass`: no `Blocker` or `Major` remains; important claims are evidence-backed, repository-backed, validation-backed, or owner-confirmed as needed; the plan is executable by someone without the prior discussion.
+- `Pass under assumptions`: no `Blocker` or `Major` remains if explicitly listed assumptions hold, but one or more important facts were not independently verified.
+- `Pass with notes`: only `Minor` issues or explicit `Accepted Risk` items remain.
+- `Revise`: any `Blocker` or unresolved `Major` remains, or the plan would likely create avoidable debt.
+- `Blocked`: essential input is unavailable and further refinement would require guessing.
+
+
+## Approval-to-Action Semantics
+
+A gate decision must constrain the next agent action:
+
+| Decision | Allowed Next Action | Not Allowed |
+| --- | --- | --- |
+| `Pass` | Full implementation may start; required validation, rollback, observability, and cleanup evidence must be preserved. | Ignoring gates during implementation. |
+| `Pass with notes` | Implementation may start; notes must be tracked or converted to accepted risks. | Dropping notes that affect tests, ownership, cleanup, docs, or validation. |
+| `Pass under assumptions` | Discovery, spike, validation, owner confirmation, or reversible guarded implementation. | Full production rollout, irreversible migration, public contract change, or high-risk implementation before assumptions are verified or explicitly accepted. |
+| `Revise` | Plan revision or targeted risk-reduction work. | Implementing the full plan as approved. |
+| `Blocked` | Evidence collection, owner confirmation, or scope reduction. | Continuing by guessing. |
+
+For high-risk plans, `Pass under assumptions` is not implementation approval. It only permits bounded evidence collection or reversible validation work unless the assumptions are verified or formally accepted.
 
 ## Decision Rules
 
 - Any unresolved `Blocker` means `Revise` or `Blocked`.
 - Any unresolved `Major` means the plan cannot be `Pass`.
+- Important unverified contracts, caller inventory, data shape, production behavior, permissions, rollback behavior, business constraints, or compliance constraints prevent absolute `Pass`.
 - Only `Minor` issues or explicit `Accepted Risk` items may remain for `Pass with notes`.
-- Use `Blocked` only when essential input is unavailable and further refinement would require guessing.
-- Use `Pass under assumptions` when the plan is safe only if named assumptions are true.
-- Use absolute `Pass` only when no blocker or major issue remains, material assumptions have been verified or bounded by validation, and the plan is executable by someone without the prior discussion.
-- Do not mark `Pass` merely because a plan improved across review rounds.
-- Do not downgrade a blocker or major issue unless the revised plan directly removes the risk, proves it irrelevant, or converts it into an explicit accepted risk with owner, mitigation, and trigger.
+- Use `Pass under assumptions` when the plan is coherent but depends on material assumptions that must be verified before or during implementation.
+- Use `Blocked` only when essential input is unavailable and continuing would require guessing.
+- Do not upgrade a plan to `Pass` merely because a rewrite sounds clearer. Evidence, repository alignment, validation, and gates must improve.
+
+
+## Mandatory Repo-Aware Evidence Rules
+
+When repository context is available and material, inspection is mandatory before final high-impact findings, implementation-readiness decisions, pass-like decisions, or implementation-conformance decisions.
+
+Inspect relevant:
+
+- code, docs, configs, tests, schemas, routes, imports, generated files, migrations, prompts, tools, workflows, deployment files, runbooks, and CI commands;
+- caller/consumer inventory and public contract surfaces;
+- existing permission checks, error semantics, observability, rollback, and cleanup conventions.
+
+The reviewer must produce or summarize a repository inspection ledger:
+
+| Area | Paths / Commands / Search Terms | Why Inspected | Finding | Confidence |
+| --- | --- | --- | --- | --- |
+
+Rules:
+
+- Prefer repository evidence over plan claims when they conflict.
+- Mark conflicts as `Blocker` or `Major` depending on impact.
+- Do not ask the user for information that can reasonably be discovered from the repository.
+- If repository evidence is incomplete, state the exact missing artifact, path, search area, command, or owner confirmation needed.
+- Do not treat lack of search as lack of evidence. If the agent did not inspect relevant repository areas, it must not claim repository-backed confidence.
+- If repository tools are unavailable, mark related conclusions as assumption-backed.
 
 ## Evidence Rules
 
-Do not treat plausible reasoning or simulated expert consensus as evidence.
+For each `Blocker` or `Major`, identify at least one of:
 
-For every `Blocker` or `Major` finding, record at least one of:
-
-- plan text that creates the risk;
-- repository, documentation, schema, config, test, log, metric, or prior-discussion evidence;
-- missing business, production, external contract, data, or domain fact;
+- exact plan text that creates the risk;
+- repository, documentation, schema, config, test, log, metric, trace, eval, or prior-discussion evidence;
+- missing business, production, external contract, compliance, or domain-owner fact;
 - concrete failure scenario that makes the risk material.
 
-For every passing decision, record whether it is:
+Before `Pass`, `Pass under assumptions`, or `Pass with notes`, produce a gate evidence matrix covering:
 
-- evidence-backed;
-- assumption-backed;
-- validation-backed.
+- Scope.
+- Boundary.
+- Contracts.
+- State/migration.
+- Failure behavior.
+- Observability.
+- Validation.
+- Rollout/rollback.
+- Security/privacy.
+- Technical debt control.
 
-Absolute `Pass` is not allowed when important contracts, caller inventory, production data shape, permissions, rollout behavior, rollback behavior, or business constraints are only assumed.
+
+## Evidence Collection Gate
+
+When evidence gaps block or condition approval, produce an evidence collection plan instead of absolute `Pass`.
+
+| Missing Evidence | Why It Matters | How To Collect | Owner / Source | Decision Impact | Can Implementation Start? |
+| --- | --- | --- | --- | --- | --- |
+
+Evidence collection must separate:
+
+- repo-discoverable facts, such as callers, schemas, routes, tests, configs, migrations, prompts, tools, and existing docs;
+- validation artifacts, such as CI, dry-runs, contract tests, evals, smoke checks, rollback rehearsals, dashboards, screenshots, or logs;
+- external facts, such as production traffic, historical incidents, partner contracts, compliance requirements, business priority, operator constraints, or owner confirmation.
+
+A missing material fact can be downgraded only when it is verified, made irrelevant by scope reduction, or converted into a valid `Accepted Risk`.
+
+## High-Risk External Validation Gate
+
+For high-risk plans, absolute `Pass` requires repository evidence plus validation evidence or explicit owner confirmation.
+
+Treat a plan as high-risk when it involves any of:
+
+- irreversible data or state changes;
+- public API, event, schema, storage, prompt/tool, permission, or workflow contract changes;
+- security, privacy, compliance, billing, payment, authentication, authorization, access-control, or user-data impact;
+- production migration or high-blast-radius rollout;
+- autonomous agent actions with real-world side effects;
+- user-visible workflow changes that are hard to roll back;
+- cross-team or external dependency coordination;
+- performance or reliability assumptions that could affect SLOs.
+
+For high-risk plans, require at least one of:
+
+- executed validation evidence;
+- migration dry-run or rollback rehearsal;
+- contract tests or compatibility checks;
+- production smoke, replay, or staged-rollout evidence when available;
+- domain owner, operator, security, compliance, or product confirmation;
+- explicit `Accepted Risk` with owner, trigger, mitigation, monitoring, and expiry.
+
+Without this, use `Pass under assumptions`, `Revise`, or `Blocked`, not absolute `Pass`.
+
+
+## Implementation Conformance Gate
+
+Use after a coding agent or engineer produces code, config, migration, tests, prompt/tool, docs, or deployment changes from an approved plan.
+
+Implementation cannot pass unless:
+
+- actual changes map to approved plan sections, gates, or accepted risks;
+- unplanned APIs, schemas, files, routes, permissions, configs, prompts, tools, migrations, jobs, side effects, public behavior, or operational procedures are listed and reviewed;
+- tests and validation artifacts target the real risk, not only changed lines;
+- rollout, rollback, observability, cleanup, owner, and accepted-risk triggers remain valid after the diff;
+- temporary adapters, feature flags, facades, dual paths, eval fixtures, prompts, queues, dashboards, or runbooks have owner, metric/signal, and deletion or review trigger;
+- implementation shortcuts do not create new unreviewed debt.
+
+Implementation decisions:
+
+- `Implementation Pass`: matches the approved plan and has required validation evidence or explicitly accepted deferrals.
+- `Implementation Pass under assumptions`: matches the approved plan, but material validation, owner confirmation, or production evidence remains pending.
+- `Revise implementation`: deviates from the approved plan, lacks required evidence, or introduces unreviewed debt.
+- `Implementation Blocked`: the diff or evidence cannot be inspected safely.
+
+A normal test pass is not sufficient for implementation pass if the tests do not cover the approved gates or riskiest failure modes.
+
+## Pre-Pass Stress Test Gate
+
+Before `Pass`, `Pass under assumptions`, or `Pass with notes`, check at least three failure scenarios:
+
+1. Most likely failure.
+2. Most expensive or user-visible failure.
+3. Hardest-to-detect technical-debt failure.
+
+Each scenario must include:
+
+- trigger;
+- affected user, caller, component, or data;
+- detection signal;
+- mitigation;
+- rollback or cleanup path;
+- whether the final plan handles it.
+
+If a severe or likely scenario has no credible detection, mitigation, or rollback path, mark the plan `Revise` or `Blocked`.
+
+## Regression Gate
+
+When reviewing an updated plan, prior `Blocker` and `Major` findings must be checked before introducing new critique.
+
+For each prior finding, classify current status as:
+
+- `Resolved`: the new plan directly fixes the issue with evidence or a concrete mechanism.
+- `Partial`: the plan improves the issue but leaves material ambiguity.
+- `Open`: the issue still exists.
+- `Regressed`: the new plan makes the issue worse or reintroduces a resolved risk.
+
+A plan cannot pass while a prior `Blocker` or unresolved `Major` remains open or regressed.
 
 ## Pass Criteria
 
 A plan passes only when:
 
 - Problem, goals, non-goals, and success criteria are explicit.
-- Ownership boundaries are clear: which module/service/component/team/process owns which responsibility.
-- Public contracts are named: APIs, events, DTOs, schemas, storage formats, permissions, UI states, CLI behavior, job behavior, or external provider behavior.
+- Ownership boundaries are clear: which module/service/component/artifact owns which responsibility.
+- Public or critical contracts are named: APIs, events, DTOs, schemas, storage formats, permissions, UI states, CLI behavior, workflow states, prompts/tools, docs contracts, or operator procedures as applicable.
 - Compatibility and migration are addressed when existing users/data/callers/workflows are affected.
-- Failure modes are handled: timeout, partial failure, retries, idempotency, cancellation, degraded behavior, rollback, and cleanup.
-- Observability is sufficient for the change: logs, metrics, traces, request ids, dashboards, alerts, audit events, or smoke signals where relevant.
-- Validation strategy matches risk: unit, integration, contract, e2e, migration dry-run, manual QA, load, security, accessibility, evals, or production smoke checks.
-- Rollout and rollback are credible, or the plan explains why an atomic direct refactor is safer.
-- Security, privacy, permissions, actor isolation, and data exposure are considered when user data, auth, tokens, cross-boundary access, AI/tool use, or external dependencies are involved.
-- The implementation sequence is clear enough that an engineer can execute without inventing architecture mid-flight.
-- Remaining risks are explicit, owned, acceptable, mitigated, and bounded by follow-up or removal triggers.
-- The plan states which conclusions are evidence-backed and which are assumption-backed.
-
-## Gate Evidence Matrix
-
-Use this matrix before any passing decision:
-
-| Gate | Evidence / Assumption | Status |
-| --- | --- | --- |
-| Scope |  | Pass/Revise/Blocked |
-| Boundary |  | Pass/Revise/Blocked |
-| Contracts |  | Pass/Revise/Blocked/N/A |
-| State/Migration |  | Pass/Revise/Blocked/N/A |
-| Failure behavior |  | Pass/Revise/Blocked |
-| Observability |  | Pass/Revise/Blocked/N/A |
-| Validation |  | Pass/Revise/Blocked |
-| Rollout/Rollback |  | Pass/Revise/Blocked/N/A |
-| Security/Privacy |  | Pass/Revise/Blocked/N/A |
-| Technical debt control |  | Pass/Revise/Blocked |
-
-Use `N/A` only when the gate truly does not apply. If a gate is unknown and material, mark `Revise` or `Blocked`, not `N/A`.
-
-## Pre-Pass Stress Test
-
-Before marking `Pass`, `Pass under assumptions`, or `Pass with notes`, test the plan against at least three scenarios:
-
-1. Most likely failure.
-2. Most expensive or user-visible failure.
-3. Hardest-to-detect technical-debt failure.
-
-For each scenario, identify:
-
-- trigger;
-- affected user/caller/component/data;
-- detection signal;
-- mitigation;
-- rollback or cleanup path;
-- whether the final plan handles it.
-
-A plan cannot receive an absolute `Pass` if the stress test reveals an unresolved blocker or major issue.
-
-## Regression Gate
-
-When reviewing an updated plan, prior blockers and major findings must be checked before new critique is introduced.
-
-| Prior Finding | Previous Severity | Current Status | Evidence | New Severity |
-| --- | --- | --- | --- | --- |
-|  | Blocker/Major/Minor | Resolved/Partial/Open/Regressed |  |  |
-
-Status meanings:
-
-- `Resolved`: the new plan directly removes the risk or adds credible evidence/validation.
-- `Partial`: the plan mentions the issue or reduces impact but leaves a material gap.
-- `Open`: the issue remains unaddressed.
-- `Regressed`: the issue became worse, broader, less observable, less reversible, or less testable.
-
-A prior `Blocker` or `Major` with `Partial`, `Open`, or `Regressed` status must keep the final decision at `Revise` or `Blocked`, unless it is converted into a valid `Accepted Risk`.
+- Failure modes are handled: timeout, partial failure, retries, idempotency, degraded behavior, rollback, and cleanup where relevant.
+- Observability is sufficient to answer what changed, who or what was affected, where it failed, and why.
+- Validation strategy matches risk: unit, integration, contract, e2e, migration dry-run, manual QA, load, security, eval, replay, or production smoke checks as applicable.
+- Rollout and rollback are credible, or the plan explains why an atomic direct change is safer.
+- Security, privacy, permissions, compliance, and data exposure are considered when users, secrets, auth, tools, models, or cross-boundary access are involved.
+- The implementation sequence is clear enough that an engineer or coding agent can execute without inventing architecture mid-flight.
+- Remaining risks are explicit, owned, monitored or validated, and acceptable.
 
 ## Accepted Risk Requirements
 
-An accepted risk must include:
+A risk can be marked `Accepted Risk` only when all are explicit:
 
-- risk description;
 - owner;
-- affected users/callers/data/components;
-- reason for accepting it now;
+- impact;
 - mitigation;
-- monitoring or validation;
-- review date, metric threshold, deletion trigger, or follow-up condition.
+- validation or monitoring path;
+- trigger for revisit, removal, or escalation;
+- expiry condition or review condition;
+- reason acceptance is better than immediate resolution.
 
-A risk without owner, mitigation, and trigger is not an accepted risk; it is unresolved debt.
+Do not mark unresolved ambiguity as `Accepted Risk`. Do not use `Accepted Risk` to hide a missing decision, missing owner, or missing validation path.
 
 ## Common Technical Debt Traps
 
-- A gateway or facade accumulates product rules, mapping logic, retries, auth quirks, and downstream-specific branching without clear ownership.
-- Local validation duplicates downstream rules and drifts from the true contract.
+- A facade accumulates product rules, mapping logic, retries, auth quirks, and downstream-specific branching without clear ownership.
+- Local validation duplicates the real source of truth and drifts from the true contract.
 - "Temporary compatibility" has no removal trigger or owner.
 - A slice-based rollout preserves the worst old abstraction and spreads adapter logic across new code.
 - A direct refactor is proposed without an inventory of callers, state, migrations, rollback, and acceptance tests.
-- Error semantics are inconsistent across layers, causing clients to depend on accidental status codes or message text.
-- Shared DTOs become a dumping ground for unrelated use cases.
-- Observability is added as generic logging but cannot answer "which user/request/path/downstream failed and why".
-- Tests verify happy paths while missing contract, migration, rollback, and failure behavior.
+- Error semantics are inconsistent across layers, causing consumers to depend on accidental status codes or message text.
+- Shared DTOs, shared state, or shared prompts become dumping grounds for unrelated use cases.
+- Observability is added as generic logging but cannot answer which user/request/workflow/component failed and why.
+- Tests verify happy paths while missing contract, migration, permission, failure, or eval behavior.
 - The plan uses broad terms such as "unified", "standardized", or "decoupled" without naming the new boundary.
-- The plan improves local structure while preserving the real source of debt at a boundary, contract, or ownership seam.
-- Feature flags, adapters, compatibility shells, or dual paths are introduced without ownership, metrics, deletion trigger, and cleanup plan.
-- The plan proposes broad abstraction before proving there are multiple real use cases.
-- The plan treats a generated implementation plan as evidence instead of verifying it against code, contracts, tests, data, or operations.
-- The plan adds validation or logging generically but cannot prove the riskiest assumption.
-- The plan makes irreversible data, contract, or user-facing changes before proving rollback or compatibility.
 
-## Agent-Generated Plan Traps
+## Agent Self-Review Traps
 
-Use these traps when the proposal was generated or heavily shaped by an agent:
+- The same model invents the plan, reviews it, fixes it, and approves it without external evidence.
+- The plan treats plausible architecture reasoning as proof.
+- Tests or evals are described but do not actually cover the riskiest behavior.
+- Missing facts are silently converted into assumptions.
+- The final answer sounds more confident after review even though evidence did not improve.
+- Repository context exists but was not inspected before claiming implementation readiness.
 
-- The plan invents APIs, files, schemas, commands, constraints, owners, or product behavior not present in evidence.
-- The plan is internally consistent but unsupported by repository or production facts.
-- The plan uses confident language to hide unknown caller inventory, data shape, permissions, or operational behavior.
-- The validation plan checks what the agent changed rather than the risk that could break production.
-- Tests are proposed at the wrong level and would pass even if the real contract is broken.
-- The plan overfits to the prompt and misses hidden constraints from existing code, data, users, or deployment process.
-- The plan collapses expert disagreement into a smooth compromise without naming tradeoffs.
-- The final review declares success because all written TODOs were addressed, not because the gates passed.
+## Over-Engineering Traps
 
-## Overengineering Traps
+- The plan adds abstraction, process, or infrastructure without naming the risk it reduces.
+- Low-risk changes are forced through high-ceremony rollout that creates more coordination debt than safety.
+- Optional future flexibility dominates current correctness and maintainability.
+- A generic framework replaces a small explicit design without evidence that variation is real.
 
-- The plan adds a framework, platform, abstraction, event bus, plugin system, or policy engine before the need is proven.
-- The plan creates generic extension points but cannot name the next concrete extension.
-- The proposed architecture increases operational surface area more than it reduces product or engineering risk.
-- The migration plan is safer on paper but creates long-lived parallel systems that will be hard to remove.
-- The plan spreads ownership across many components when a local, reversible change would solve the problem.
-- The plan adds process ceremony that does not produce evidence, reduce blast radius, or improve rollback.
+## Minimal Safe Plan Gate
+
+When the proposed plan is unsafe but the goal is valid, the reviewer should propose the smallest safe path that:
+
+- avoids irreversible changes;
+- preserves existing contracts until migration is proven;
+- validates the riskiest assumption early;
+- includes rollback or cleanup;
+- avoids long-lived compatibility debt.
+
+Use this instead of only returning critique when enough context exists to produce a safer plan.
 
 ## Approach Selection
 
@@ -180,70 +263,61 @@ Choose slice-based delivery when:
 
 - The blast radius is high and compatibility must be proven gradually.
 - Old and new paths can coexist without duplicating complex business rules.
-- Feature flags or routing rules can safely separate traffic.
+- Feature flags, routing rules, or workflow gates can safely separate traffic or usage.
 - Each slice removes risk or validates an assumption.
-- A slice has a clear deletion or convergence path; otherwise it may create permanent drift.
 
 Choose direct refactor when:
 
 - The existing boundary is the primary source of debt.
 - Maintaining two paths would duplicate complex rules or increase drift.
 - Callers and contracts are known and can be updated together.
-- Rollback is feasible through version control/deployment rollback, data is unchanged or reversible, and acceptance checks are strong.
-- The risk of compatibility scaffolding is greater than the risk of a coordinated refactor.
+- Rollback is feasible through deployment/version rollback, data is unchanged or reversible, and acceptance checks are strong.
 
 Choose a hybrid when:
 
 - The internal structure should be replaced directly, but external behavior must remain compatible.
 - A stable facade can protect callers while internals are rewritten.
-- Migration can be staged by data/domain boundary rather than by UI feature.
-- Temporary compatibility has an owner, metric, and deletion trigger.
-
-## Minimal Safe Plan Gate
-
-Use a minimal safe plan when the original proposal is unsafe but the goal is still valid.
-
-A minimal safe plan must:
-
-- avoid irreversible data, contract, or user-visible changes until evidence exists;
-- preserve existing public contracts unless migration and compatibility are explicit;
-- validate the riskiest assumption with the smallest useful slice or spike;
-- include rollback, cleanup, or an explicit stop condition;
-- avoid creating long-lived compatibility shells, adapter sprawl, duplicated business rules, or unowned feature flags;
-- state what evidence would allow the larger plan to continue.
-
-Do not call a plan minimal if it adds broad abstraction, new infrastructure, or multi-component coordination before proving the core risk.
-
-## Implementation Readiness Score
-
-A score may help communication, but it is non-authoritative and cannot override severity gates.
-
-```markdown
-Implementation Readiness: <0-100>
-Confidence: Low/Medium/High
-Reason:
-- ...
-```
-
-Scoring constraints:
-
-- Any unresolved `Blocker` means implementation is unsafe except for discovery or validation work.
-- Any unresolved `Major` means implementation should not start except for targeted risk-reduction work.
-- `Pass under assumptions` should not have high confidence unless each assumption has a clear validation owner and trigger.
-- A high score cannot override a failed gate.
+- Migration can be staged by state/domain/workflow boundary rather than arbitrary file or UI slices.
 
 ## Disagreement Resolution Gate
 
-When reviewers disagree, the plan cannot pass until the disagreement is resolved or recorded as an accepted risk.
+When expert roles disagree, the decision must not average opinions.
 
-Resolve by comparing:
+The final decision must state:
 
+- conflicting recommendations;
+- which risk or invariant each recommendation protects;
 - blast radius;
 - reversibility;
 - validation strength;
-- user or caller impact;
-- operational burden;
 - delivery complexity;
-- long-term debt.
+- long-term debt impact;
+- chosen path;
+- rejected options and accepted risks.
 
-Do not average conflicting recommendations. Choose one path and record why the rejected path was not selected.
+If the disagreement affects safety, data, contracts, migration, or user impact and cannot be resolved with available evidence, mark `Revise` or `Blocked`.
+
+## Implementation Readiness Score
+
+Readiness score is optional and must not override severity.
+
+A plan with unresolved `Blocker` or `Major` cannot be marked implementation-ready regardless of score.
+
+Use the score only to communicate execution readiness:
+
+- 90-100: ready to implement; remaining work is minor or accepted.
+- 70-89: conditionally ready; implementation may start only if listed assumptions, validations, or confirmations are handled.
+- 40-69: not ready; revise before implementation.
+- 0-39: blocked or unsafe.
+
+Readiness should consider:
+
+- repository alignment, inspected artifacts, and repository inspection ledger quality;
+- clarity of scope and contracts;
+- migration and rollback safety;
+- validation strength;
+- observability and operational readiness;
+- security/privacy/compliance risk;
+- technical debt containment;
+- owner confirmation for high-risk assumptions;
+- implementation conformance when code, config, migration, prompt/tool, tests, docs, or deployment changes already exist.
