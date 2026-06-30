@@ -18,13 +18,15 @@ This skill is designed for users who may be using an agent outside their own dom
 
 ## Installation
 
-Clone this repository into your Codex skills directory:
+Install the packaged skill with `npx skills`:
 
 ```sh
-git clone https://github.com/ClenLu/refine-technical-plan.git ~/.codex/skills/refine-technical-plan
+npx skills add ClenLu/refine-technical-plan --skill refine-technical-plan -g -a codex -y
 ```
 
 Restart Codex or reload skills if your environment requires it.
+
+The installable skill lives under [`skills/refine-technical-plan/`](./skills/refine-technical-plan/). Keeping the full skill in that directory ensures `npx skills add` installs `SKILL.md` together with its bundled `references/`, `evals/`, and `agents/` files.
 
 ## Usage
 
@@ -42,29 +44,31 @@ After implementation, ask it to compare the produced code, config, migration, pr
 Use $refine-technical-plan to run implementation conformance review for this diff against the approved plan.
 ```
 
-When changing the skill itself, use the lightweight evals under [`evals/`](./evals/) to check trigger behavior, decision labels, evidence gates, repository-aware review, and implementation conformance behavior.
+When changing the skill itself, use the lightweight evals under [`skills/refine-technical-plan/evals/`](./skills/refine-technical-plan/evals/) to check trigger behavior, decision labels, evidence gates, repository-aware review, and implementation conformance behavior.
 
 ## Repository Structure
 
 ```text
 .
-├── SKILL.md
-├── agents/
-│   └── openai.yaml
-├── evals/
-│   ├── README.md
-│   ├── cases.jsonl
-│   ├── manual-eval-spec.yaml
-│   ├── rubric.md
-│   └── trigger-tests.md
-├── references/
-│   ├── domain-packs.md
-│   ├── document-template.md
-│   ├── implementation-conformance.md
-│   ├── output-templates.md
-│   ├── quality-gates.md
-│   ├── repo-aware-review.md
-│   └── review-rubric.md
+├── skills/
+│   └── refine-technical-plan/
+│       ├── SKILL.md
+│       ├── agents/
+│       │   └── openai.yaml
+│       ├── evals/
+│       │   ├── README.md
+│       │   ├── cases.jsonl
+│       │   ├── manual-eval-spec.yaml
+│       │   ├── rubric.md
+│       │   └── trigger-tests.md
+│       └── references/
+│           ├── domain-packs.md
+│           ├── document-template.md
+│           ├── implementation-conformance.md
+│           ├── output-templates.md
+│           ├── quality-gates.md
+│           ├── repo-aware-review.md
+│           └── review-rubric.md
 ├── LICENSE
 └── README.md
 ```
