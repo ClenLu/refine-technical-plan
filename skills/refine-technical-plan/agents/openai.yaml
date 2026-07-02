@@ -1,4 +1,4 @@
 interface:
   display_name: "Refine Technical Plan"
-  short_description: "Evidence-gated technical plan review"
-  default_prompt: "Use $refine-technical-plan to review this technical plan for readiness, risks, evidence gaps, and required validation."
+  short_description: "Expert-panel review loop for technical plans"
+  default_prompt: "Use $refine-technical-plan to give a plain-language go/no-go conclusion, polish the plan for up to 3 complete cycles by default, make each cycle include diagnosis, plan rewrite, and final gate, score implementation readiness, avoid invented evidence or expert-panel filler, and state whether another cycle or user-provided information is needed."
