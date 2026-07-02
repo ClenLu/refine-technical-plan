@@ -7,14 +7,16 @@ This skill is designed for users who may be relying on an agent outside their ow
 ## What It Does
 
 - Reviews architecture, refactor, migration, integration, AI/agent, product, and implementation plans.
-- Chooses expert review roles based on the actual risk area instead of applying a fixed checklist.
+- Chooses only the expert review lenses that matter for the actual risk area instead of applying a fixed checklist or placeholder panel.
 - Requires repository-aware evidence checks before pass-like or implementation-ready decisions when running inside a coding agent.
 - Checks current external technical facts against authoritative sources when plans depend on third-party APIs, SDKs, frameworks, cloud services, platform behavior, LLM APIs, security advisories, compliance rules, or provider contracts.
 - Starts with a plain-language conclusion so non-specialists can tell whether to start, pause, or add missing plan content.
 - Finds weak assumptions, hidden coupling, missing validation, rollback gaps, unclear ownership, and long-term debt risks.
 - Uses an approval state machine and refinement ledger to track risk status, evidence status, missing plan content, score caps, and pass conditions.
 - Scores implementation readiness from 0 to 100 and caps the score when high-risk assumptions, missing owner decisions, or blockers remain.
-- Runs a default first batch of up to three complete refinement cycles. Each cycle diagnoses the plan, rewrites or reshapes it, and gates the refined version.
+- Runs a default first batch of up to three real refinement cycles. Each real cycle diagnoses the plan, rewrites or reshapes it, and gates the refined version.
+- Stops early on clear pass or blocker instead of narrating empty extra cycles.
+- Keeps the visible output proportional: the conclusion, score, next actions, state machine, and ledger stay required, while supporting sections shrink when they add little decision value.
 - Continues across later user updates until the plan reaches `Pass` / `通过` or becomes blocked on missing facts or decisions.
 - Checks implementation diffs against approved plans through implementation conformance review.
 - Reports review coverage and owner/SME escalation needs for high-risk, unfamiliar-domain, production, security, data, or compliance decisions.
@@ -41,6 +43,8 @@ Use $refine-technical-plan to automatically review, revise, document, and re-rev
 ```
 
 You can provide a rough proposal, PRD, migration sketch, architecture idea, updated plan, approved plan, implementation diff, validation artifact, or an agent-generated plan that looks plausible but needs an independent risk review. The skill should inspect available repository context first and ask only for business, production, compliance, external-contract, operator, or owner facts that cannot reasonably be discovered.
+
+If the plan depends on unstable or versioned external facts, the skill should check current authoritative documentation before treating those claims as pass-worthy evidence.
 
 For Chinese workflows, prompts like this should trigger the full refinement loop:
 
@@ -69,7 +73,11 @@ Regression prompts live in [`skills/refine-technical-plan/evals/evals.json`](./s
 - approval state machine and refinement ledger updates;
 - plain-language conclusions for non-specialists;
 - score caps, missing-plan-content handling, and pass/block decisions;
-- Chinese output labels and shareable plan language.
+- Chinese output labels and shareable plan language;
+- repository-aware evidence inspection when local context exists;
+- authoritative external verification for version-sensitive claims;
+- plan-to-code conformance review against an approved plan;
+- proportional output when the user wants a quick go/no-go answer.
 
 This repository does not include a dedicated eval runner. Validate changes by installing the skill locally and running the bundled prompts through your normal Codex or skill-evaluation harness.
 

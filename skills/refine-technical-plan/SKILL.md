@@ -1,6 +1,6 @@
 ---
 name: refine-technical-plan
-description: Review, refine, harden, score, and gate technical plans with simulated expert-panel review, a pre-pass approval state machine, a refinement ledger that tracks risks until closure, plain-language conclusions for general readers, an unbounded refinement loop until expert `Pass`, a default first batch of three complete cycles where each cycle includes diagnosis + plan rewrite + final gate, evidence gates, mandatory repo-aware inspection, external freshness/authority checks, evidence-integrity and practical-judgment guardrails, review coverage, missing-plan-content handling, implementation-readiness scoring, continuation decisions, and plan-to-code conformance. Use this whenever the user asks to 打磨方案, polish/review/refine a technical plan, architecture/refactor/migration/rollout/integration plan, PRD-to-engineering plan, AI/agent-generated proposal, or when they want "顶尖专家/架构师/专家团队" to debate a plan until it passes. Also use when the user is working outside their domain, needs help judging an agent's proposal, worries about technical debt, wants agent/model overconfidence checked, wants a plan checked before implementation, asks for a score, asks whether to continue refining, or asks what content is still missing for the next cycle.
+description: Use when the user asks to 打磨、评审、把关、评分、或继续迭代一个技术方案，尤其是 architecture/refactor/migration/rollout/integration 方案、PRD-to-engineering plan、或 AI/agent 生成的实施方案；也用于用户不熟该领域、担心技术债、想在实现前拿到 go/no-go 判断，或想知道下一轮还缺哪些方案内容时。
 ---
 
 # Refine Technical Plan
@@ -22,6 +22,15 @@ Treat every review as a compact expert-team design review. Select only the roles
 
 Use expert roles as functional review lenses. Choose roles and checks from the plan's actual risks, and keep role descriptions functional.
 
+## Panel Selection And Reporting
+
+Choose the smallest set of review lenses that can explain the decision.
+
+- Do not output placeholder experts just to satisfy a template.
+- If one role adds no distinct objection, rewrite, or pass condition, merge it into another lens or omit it.
+- In the visible output, list only the roles actually used and tie each one to a concrete risk, rewrite, tradeoff, or pass condition.
+- When the plan is clearly concentrated in one area, it is better to show two precise lenses than six generic ones.
+
 ## Evidence First
 
 Before judging a plan, collect enough evidence to review the actual proposal.
@@ -41,7 +50,7 @@ Evidence claims cover only files, repositories, metrics, production systems, API
 4. Decide status:
    - `卡住`: essential information, artifact access, or authoritative context is missing and guessing would be irresponsible.
    - `需要修改`: material risks remain, boundaries are unclear, validation is weak, or the plan would likely create preventable debt.
-   - `带备注通过`: only minor follow-ups remain and implementation safety is intact.
+   - `基本通过，带小备注`: only minor follow-ups remain and implementation safety is intact.
    - `通过`: the plan is coherent, evidence-backed, scoped, testable, rollback-aware, and ready for implementation.
 5. Update the approval state machine and refinement ledger. Every material risk must have a current state, evidence status, missing-plan-content need, score impact, and pass condition.
 6. Score the refined plan after critique or rewrite. Use the scoring rules below to make progress visible while keeping blockers explicit.
@@ -51,6 +60,18 @@ Evidence claims cover only files, repositories, metrics, production systems, API
 10. When implementation later begins, compare code against the approved plan if the user asks for review. Flag plan drift, missing validation, unsafe shortcuts, and newly introduced debt.
 
 Default to documents and plans. Write implementation code when the user explicitly asks for code.
+
+## Proportional Execution
+
+The workflow is strict; the visible output should still stay proportional to the decision being made.
+
+- A cycle is real work, not formatting. Count a cycle only when the critique, rewritten plan, or gate decision materially changes.
+- The default first batch is up to three real cycles, not a requirement to narrate three empty passes.
+- Stop early on clear `通过` or `卡住`; do not simulate extra cycles after the decision is already obvious.
+- If the user mainly wants a go/no-go answer, keep the required sections but compress supporting commentary to the material risks and actions.
+- If the plan is almost ready, keep the ledger short and focus on the few remaining items instead of repeating the whole review in different words.
+- Only emit `优化后方案` when you actually rewrote the plan, or when the user explicitly asked for rewritten plan text.
+- If repo context or external documentation is absent, say so plainly instead of implying they were inspected.
 
 ## Approval Standard
 
@@ -245,12 +266,8 @@ For reviews, use this structure:
 **关键假设**
 - ...
 
-**专家讨论**
-- 架构视角：...
-- 领域正确性：...
-- 落地实现：...
-- 稳定性/安全：...
-- 产品/运维：...
+**专家讨论（只列本次实际启用的视角）**
+- [视角名]：...
 
 **必须修正**
 - ...
@@ -264,6 +281,10 @@ For reviews, use this structure:
 **下一周期检查重点**
 - ...
 ```
+
+Required in every review: `结论（先看这里）`, `打磨评分`, `下一步行动`, `方案通过前状态机`, and `详细打磨账本`.
+
+Support sections are optional when they do not change the decision: `已检查证据`, `关键假设`, `专家讨论`, `必须修正`, `建议优化`, `通过条件`, and `下一周期检查重点`. Omit empty sections, and compress them aggressively when the user asked for a brief answer.
 
 For optimized plans, use this structure:
 
