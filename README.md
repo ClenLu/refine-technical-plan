@@ -36,7 +36,9 @@ The installable skill lives under [`skills/refine-technical-plan/`](./skills/ref
 
 ## Usage
 
-Ask Codex to use the skill when you have a plan, agent proposal, architecture idea, or PRD-to-engineering direction that needs hardening:
+This skill is intended to be actively invoked, not auto-triggered from broad plan-related wording alone.
+
+Ask Codex to use the skill explicitly when you have a plan, agent proposal, architecture idea, or PRD-to-engineering direction that needs hardening:
 
 ```text
 Use $refine-technical-plan to automatically review, revise, document, and re-review this technical plan until it passes or reaches clear blockers.

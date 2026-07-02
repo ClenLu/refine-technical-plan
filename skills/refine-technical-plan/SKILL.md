@@ -1,6 +1,6 @@
 ---
 name: refine-technical-plan
-description: Use when the user asks to 打磨、评审、把关、评分、或继续迭代一个技术方案，尤其是 architecture/refactor/migration/rollout/integration 方案、PRD-to-engineering plan、或 AI/agent 生成的实施方案；也用于用户不熟该领域、担心技术债、想在实现前拿到 go/no-go 判断，或想知道下一轮还缺哪些方案内容时。
+description: Use when the user explicitly invokes `$refine-technical-plan` or clearly asks for this exact expert-panel refinement loop by name. Do not auto-trigger from generic mentions of plans, architecture, refactors, migrations, technical debt, unfamiliar domains, or agent proposals alone.
 ---
 
 # Refine Technical Plan
