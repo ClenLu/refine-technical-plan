@@ -151,6 +151,8 @@ For high-risk plans, absolute `Pass` requires repository evidence plus at least 
 
 Without this, use `Pass under assumptions`, `Revise`, or `Blocked`, not absolute `Pass`.
 
+High-risk plans additionally require a survived kill-shot: a pre-registered deadliest failure that was genuinely attempted and not confirmed. Apply `references/falsification-gate.md`. A kill-shot that was only argued, skipped when a cheap probe existed, or left untestable caps the decision at `Pass under assumptions`; a confirmed kill forces `Revise` or `Blocked`.
+
 
 ## Freshness / External Technical Authority Gate
 
@@ -217,6 +219,7 @@ A plan passes only when:
 - Security, privacy, permissions, compliance, abuse, and data exposure are considered when users, secrets, auth, tools, models, or cross-boundary access are involved.
 - Material external technical facts are current, version-specific, repository-pinned, owner-confirmed, or explicitly assumption-backed with bounded validation.
 - Real expert, owner, operator, security/privacy/compliance, product, or external partner escalation has been handled when triggers apply.
+- For high-risk plans, the deadliest failure was pre-registered and survived a genuine disconfirmation attempt (falsification gate), not just covered by a checklist.
 - Review coverage exposes material blind spots and no uninspected material area is silently treated as safe.
 - The implementation sequence is clear enough that an engineer or coding agent can execute without inventing architecture mid-flight.
 - Remaining risks are explicit, owned, monitored or validated, and acceptable.
@@ -239,6 +242,7 @@ Use this matrix before pass-like decisions.
 | External authority / freshness |  | Pass/Revise/N/A |
 | Real owner / SME escalation |  | Pass/Revise/N/A |
 | Review coverage |  | Pass/Revise/N/A |
+| Falsification / kill-shot (high-risk) |  | Killed/Survived/Untestable/N/A |
 | Technical debt control |  | Pass/Revise/N/A |
 
 Use `N/A` only when the gate truly does not apply. If a gate is unknown and material, mark `Revise` or `Blocked`, not `N/A`.
@@ -262,6 +266,8 @@ Each scenario must include:
 
 If a severe or likely scenario has no credible detection, mitigation, or rollback path, mark the plan `Revise` or `Blocked`.
 
+For high-risk plans, do not stop at enumerating scenarios. Select the deadliest one, pre-register it, and try to disprove the plan empirically using `references/falsification-gate.md`. A survived kill-shot is stronger evidence than a satisfied checklist row.
+
 ## Regression Gate
 
 When reviewing an updated plan, prior `Blocker` and `Major` findings must be checked before introducing new critique.
@@ -277,6 +283,31 @@ Status meanings:
 - `Regressed`: the new plan makes the issue worse or reintroduces a resolved risk.
 
 A plan cannot pass while a prior `Blocker` or unresolved `Major` remains open, partial, or regressed unless it is converted into a valid `Accepted Risk`.
+
+## Loop Convergence Gate
+
+The refine loop continues until the plan passes, but it must converge instead of looping forever, oscillating, or expanding scope. Use this gate to decide whether to keep iterating, converge to a pass-like decision, or terminate and escalate.
+
+Convergence rules:
+
+- If a full review round adds no new `Blocker` or `Major` and only `Minor` items or valid `Accepted Risk` items remain, converge to `Pass` or `Pass with notes`. Do not manufacture new `Minor` findings to keep the loop open.
+- `Minor` findings never block a pass. Only unresolved `Blocker`/`Major` or missing required evidence, validation, or owner confirmation may prevent absolute `Pass`.
+- Do not reopen a `Resolved` finding, re-average a settled disagreement, or overturn a recorded decision without new evidence, a new regression, or a newly exposed named risk. Record the reason for any reopen and keep the original issue ID.
+- A new check may be added only when it maps to a newly exposed named risk in this plan. Do not expand scope, add ceremony, or explore adjacent designs just to continue the loop (see Over-Engineering Traps).
+
+Stall detection:
+
+- If the same `Blocker` or `Major` survives repeated rounds without new evidence, stop iterating on it. Convert it into an evidence-collection task, a minimal safe plan, or an owner escalation.
+- If two or more rounds produce no material change in the decision or in the open blockers/majors, treat the loop as stalled.
+
+Termination and escalation. Terminate the automatic loop and hand back to the user or a real owner when any of these hold:
+
+- the remaining gap is an owner/business/production/compliance/external fact that only a real owner can confirm (see the escalation trigger);
+- required repository, validation, or external-authority evidence cannot be obtained by the agent;
+- the loop is stalled per the rules above;
+- the only path to `Pass` would weaken a gate, downgrade an unresolved `Blocker`/`Major` without evidence, or force `Pass`.
+
+On termination, output the current decision, the exact open items with stable IDs, and a continuation packet. Ending on `Revise`, `Blocked`, or `Pass under assumptions` with a clear packet is a valid honest stop; forcing `Pass` to end the loop is a critical failure.
 
 ## Review Issue IDs
 
@@ -462,3 +493,12 @@ Readiness should consider:
 - technical debt containment and temporary-path removal triggers;
 - owner confirmation for high-risk assumptions or external facts;
 - implementation conformance when code, config, migration, prompt/tool, tests, docs, or deployment changes already exist.
+
+### Surfacing the Refined Score in the Conclusion
+
+This score is the single canonical measure of plan quality after refinement. Surface it in the plain-language verdict as the "refined score" (打磨后评分) so a non-expert gets a quick quality signal:
+
+- Show the current post-refinement score with confidence (Low/Medium/High).
+- When a prior-round score exists, show the before→after delta (打磨前 X → 打磨后 Y) to make the loop's value visible; carry the prior score in the review ledger and continuation packet.
+- Add one line naming what caps the score (the top unresolved blocker/major, missing evidence, or untested kill-shot).
+- Do not invent a second scale. Do not raise the score to justify a pass; the score follows the gates, not the reverse. A high number with an unresolved `Blocker`/`Major`, low review coverage, or an untested high-risk kill-shot is misleading and must be explained rather than shown alone.

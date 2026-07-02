@@ -1,4 +1,4 @@
 interface:
   display_name: "Refine Technical Plan"
-  short_description: "Expert-panel refinement for technical plans"
-  default_prompt: "Use $refine-technical-plan to automatically review, revise, document, and re-review this technical plan until it passes or reaches clear blockers."
+  short_description: "Evidence-gated technical plan review"
+  default_prompt: "Use $refine-technical-plan to review this technical plan for readiness, risks, evidence gaps, and required validation."

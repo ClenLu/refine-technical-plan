@@ -1,6 +1,6 @@
 ---
 name: refine-technical-plan
-description: Review and refine technical plans with simulated expert-panel review, evidence gates, mandatory repo-aware inspection, external freshness/authority checks, review coverage scoring, owner-escalation triggers, multi-round continuation packets, implementation-readiness, and plan-to-code conformance. Use for 打磨方案, architecture/refactor/migration/rollout/integration plans, PRD-to-engineering, AI/agent proposals, updated-plan regression review, or approved-plan implementation diff review.
+description: Review, refine, harden, and gate technical plans with simulated expert-panel review, evidence gates, mandatory repo-aware inspection, external freshness/authority checks, review coverage, owner-escalation triggers, implementation-readiness, and plan-to-code conformance. Use for 打磨方案, architecture/refactor/migration/rollout/integration plans, PRD-to-engineering, AI/agent proposals, updated-plan regression review, implementation-readiness decisions, or approved-plan implementation diff review. Do not use for direct coding/execution of an already approved plan, routine debugging, casual explanation, or open-ended brainstorming unless the user asks for plan hardening, readiness, risk review, or conformance review.
 ---
 
 # Refine Technical Plan
@@ -23,14 +23,26 @@ Use this skill when the user asks to:
 
 Do not use this skill for direct implementation, routine debugging, casual explanation, or open-ended brainstorming unless the user wants plan hardening or implementation readiness.
 
+### Skill Boundary and Handoff
+
+This skill hardens and gatekeeps a plan; it is not a plan author, executor, idea generator, or debugger. When another capability fits better, hand off instead of absorbing the work:
+
+- Idea generation or requirement/design exploration with no plan to critique yet: use a brainstorming skill, then bring the result here to harden.
+- Writing a fresh implementation plan from scratch with no risk-review need yet: use a plan-writing skill; use this skill afterward to stress-test it. This skill will still derive minimal implementation detail when asked to harden a rough proposal.
+- Executing or coding an already-approved plan step by step: use a plan-execution or coding skill; this skill only reviews the plan and, later, the resulting diff for conformance.
+- Diagnosing a bug, test failure, or unexpected runtime behavior: use a debugging skill; this skill does not root-cause defects.
+
+Use this skill when the value needed is critique, evidence gating, safety judgment, implementation-readiness, or plan-to-code conformance, even if a sibling skill produced the input. If a request mixes authoring/execution with hardening, do the hardening here and name the sibling capability for the rest.
+
 ## Operating Defaults
 
-- Reply in the user's language unless the user asks otherwise; keep canonical decision labels in English.
+- Reply in the user's language unless the user asks otherwise; keep canonical decision labels in English, but gloss each label once in plain language for non-expert readers.
+- Lead every review with a short plain-language verdict in the user's language; treat gate matrices, coverage tables, ledgers, and stress tests as supporting evidence placed after it, not as the primary answer. In non-expert contexts, summarize heavy tables in plain language rather than dumping raw tables as the main response.
 - Do not write implementation code unless the user explicitly asks for code.
 - Use the lightest review mode that satisfies the request.
 - Default to automatic review, rewrite, and re-review when enough context exists.
 - Do not ask the user to manually trigger the next review or rewrite round when enough information exists to continue within the current response.
-- Run at most 3 review/rewrite cycles per response; continue across conversation turns without a fixed round limit.
+- Run at most 3 review/rewrite cycles per response; continue across conversation turns without a fixed round limit, but apply the Loop Convergence and Termination rules to converge, stop, or escalate instead of looping endlessly.
 - Do not force `Pass` to end the loop. Use `Pass under assumptions`, `Revise`, or `Blocked` when evidence or safety is insufficient.
 - Treat model reasoning as a way to identify risk, not as proof of safety.
 - Ask the user last. Inspect available repository, documents, tests, configs, schemas, and validation artifacts before asking for facts that can be discovered.
@@ -41,6 +53,7 @@ Do not use this skill for direct implementation, routine debugging, casual expla
 - For high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions, include a review coverage summary that exposes what was and was not covered.
 - Escalate to a real owner, operator, security/privacy/compliance reviewer, domain SME, or external partner when the escalation triggers in `references/quality-gates.md` apply.
 - After implementation artifacts exist, run implementation conformance review by default unless the user explicitly opts out.
+- Before any high-risk pass-like decision, apply the falsification / kill-shot gate: pre-register the single most lethal failure and try to disprove the plan with the cheapest real probe or an independent adversary, rather than accumulating confirmation-style checks. Skip it for low-risk reversible work.
 
 ## Expected Inputs
 
@@ -71,6 +84,7 @@ Choose one or combine only what is needed:
 - `Freshness / external authority review`: verify version-specific external technical facts or mark them assumption-backed.
 - `Review coverage review`: report repository, domain, external-authority, validation, and owner-confirmation coverage before a pass-like decision.
 - `Owner / SME escalation review`: identify decisions that require a real domain owner, operator, security/privacy/compliance reviewer, or external partner.
+- `Falsification / kill-shot review`: pre-register the single most lethal failure and try to disprove the plan with the cheapest real probe or an independent adversary before any high-risk pass-like decision.
 
 ## Document Mode File Handling
 
@@ -86,14 +100,13 @@ Document mode writes or updates a durable plan artifact only when the user asks 
 Load only the references needed for the current request:
 
 - `references/quality-gates.md`: severity, status model, source-of-truth hierarchy, pass/fail rules, approval-to-action semantics, freshness/external authority gate, review coverage score, owner/SME escalation triggers, high-risk validation, accepted risks, and debt traps.
+- `references/falsification-gate.md`: the kill-shot protocol — pre-registered lethal prediction, cheapest disconfirming probe, independent adversary, survive-or-fail grading, and anti-gaming rules for high-risk pass-like decisions.
 - `references/review-rubric.md`: universal review lenses, change-type lenses, external technical dependency lens, review coverage questions, evidence questions, adversarial prompts, and non-expert decision guidance.
 - `references/domain-packs.md`: deeper domain checks for frontend, backend, data, infrastructure, security, AI/agent, mobile, developer experience, documentation, external API/platform authority, and high-risk subdomains.
 - `references/repo-aware-review.md`: mandatory repository inspection, repository inspection ledger, ask-user-last policy, and repository-backed confidence rules.
 - `references/implementation-conformance.md`: diff-to-plan review, implementation evidence bundle, validation evidence, release/rollback/cleanup review, and implementation decisions.
 - `references/output-templates.md`: compact, standard, full, evidence-collection, review-coverage, continuation-packet, document-update, and implementation-conformance response templates.
 - `references/document-template.md`: durable plan document structure.
-- `examples/`: calibration examples and good/bad patterns for conditional approval, repository-backed claims, document mode, accepted risk, and implementation conformance. Use for skill maintenance or reviewer calibration, not as templates to copy blindly.
-- `evals/`: regression cases and grading rubrics for maintaining this skill. Use when changing the skill or checking trigger/gate behavior, not during normal user reviews.
 
 
 Reference loading hard rules:
@@ -103,10 +116,24 @@ Reference loading hard rules:
 - Before any implementation-conformance decision, load or apply `references/implementation-conformance.md`; CI or test success alone is not enough.
 - Before high-risk, unfamiliar-domain, non-expert, or conditional-approval output, load or apply `references/output-templates.md` so the allowed/forbidden next action, review coverage, and continuation packet are explicit.
 - When a plan depends on current external technical facts, load or apply the freshness/external authority gate in `references/quality-gates.md` and the relevant domain pack or rubric lens.
+- Before any high-risk pass-like decision, load or apply `references/falsification-gate.md` and pre-register a kill-shot; confirmation-style checks alone do not satisfy this gate.
 - When the user asks for a durable document or file, load `references/document-template.md` before writing or updating it.
-- Use `examples/` and `evals/` only for skill maintenance, calibration, or regression testing unless the user explicitly asks for examples.
 
-Do not bulk-load every reference, example, or eval file when a compact review is enough.
+Do not bulk-load every reference file when a compact review is enough.
+
+### Single Source of Truth for Shared Structures
+
+Several tables and blocks appear in multiple files. Each shared structure has one owning reference that defines its semantics and pass/fail rules. Template files reproduce only the shape for copy-paste; when a rule, column, or status changes, edit the owner, not the copies.
+
+- Severity, status model, decision rules, source-of-truth hierarchy, approval-to-action semantics, gate evidence matrix, review coverage score, freshness/external-authority gate, owner-escalation trigger, accepted-risk requirements, pre-pass stress test, regression gate, and loop convergence gate: `references/quality-gates.md`.
+- Falsification / kill-shot protocol and its output block: `references/falsification-gate.md`.
+- Repository inspection ledger: `references/repo-aware-review.md`.
+- Diff-to-plan mapping, implementation evidence bundle, validation evidence check, release/rollback/cleanup check, and conformance decisions: `references/implementation-conformance.md`.
+- Continuation packet semantics: `SKILL.md` Continuity Across Turns.
+- Plain-language verdict and decision-label glossary: `references/output-templates.md`.
+- Durable plan document structure: `references/document-template.md`.
+
+If a copy in a template file conflicts with its owner, the owner wins; fix the copy.
 
 ## Context Intake
 
@@ -156,7 +183,7 @@ Add specialized roles only when the plan justifies them, such as interface/contr
 12. If evidence gaps block or condition approval, output an evidence collection plan.
 13. If the plan is unsafe but the goal is valid, produce a minimal safe plan.
 14. When enough context exists, rewrite the plan and re-review it.
-15. Before any pass-like decision, run adversarial review and a three-scenario pre-pass stress test.
+15. Before any pass-like decision, run adversarial review and a three-scenario pre-pass stress test; for high-risk plans, apply the falsification / kill-shot gate — pre-register the deadliest failure and try to disprove the plan with the cheapest real probe or an independent adversary.
 16. Apply quality gates and approval-to-action semantics.
 17. Produce a review coverage summary for high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions.
 18. Output the decision, allowed next action, non-expert control summary, material findings, final plan or required changes, and next evidence or conformance step.
@@ -186,6 +213,7 @@ Display `Pass under assumptions` as a conditional permission, not as full approv
 Maintain a compact review ledger across turns:
 
 - prior conclusion;
+- prior-round refined score (Implementation Readiness Score), to show the before→after delta;
 - stable issue IDs for material findings, such as `B-001`, `M-001`, `A-001`, `E-001`, and `R-001`;
 - open blockers and major findings;
 - resolved findings and how they were resolved;
@@ -199,6 +227,7 @@ Output a `Continuation Packet` when the review is `Revise`, `Blocked`, `Pass und
 ```markdown
 **Continuation Packet**
 - Current decision: Pass / Pass with notes / Pass under assumptions / Revise / Blocked
+- Refined score: prior <0-100> → current <0-100> (what caps it: ...)
 - Implementation permission: Full implementation / Tracked notes only / Discovery only / No implementation
 - Open blockers: B-...
 - Open majors: M-...
@@ -211,20 +240,52 @@ Output a `Continuation Packet` when the review is `Revise`, `Blocked`, `Pass und
 
 When reviewing an updated plan, check prior blockers and major findings before introducing new critique. Do not rename an unresolved issue to make it appear resolved.
 
+## Loop Convergence and Termination
+
+The loop runs until the plan passes, but "until it passes" must not become endless critique, oscillation, or scope creep. Apply `references/quality-gates.md` Loop Convergence Gate and these rules:
+
+- Converge, do not chase perfection. If a full review round adds no new `Blocker` or `Major` and only `Minor` items or valid `Accepted Risk` items remain, move toward `Pass` or `Pass with notes`. Do not invent new minor findings to keep the loop open.
+- `Minor` never blocks. Only unresolved `Blocker` or `Major`, or missing required evidence/owner confirmation, may keep the loop from an absolute `Pass`.
+- No re-litigation. Do not reopen a `Resolved` finding or overturn a settled decision without new evidence, a new regression, or a newly exposed named risk. Record why any reopen happened.
+- No scope creep per round. A new check is allowed only when it maps to a newly exposed named risk in this plan, not to add ceremony or explore adjacent designs.
+- Detect stall. If the same `Blocker` or `Major` cannot be resolved with available evidence after repeated rounds, stop iterating on it and convert it into an evidence-collection task, a minimal safe plan, or an owner escalation.
+
+Terminate the automatic loop and hand back to the user or a real owner when any of these hold, instead of looping further:
+
+- the remaining gap is an owner/business/production/compliance/external fact that cannot be discovered and only a real owner can confirm (escalation trigger);
+- progress is blocked by missing repository, validation, or external-authority access the agent cannot obtain;
+- two or more rounds produce no material change in the decision or the open blockers/majors;
+- the only way to "pass" would be to weaken a gate, downgrade an unresolved `Blocker`/`Major` without evidence, or force `Pass`.
+
+On termination, output the current decision, the exact open items, and a `Continuation Packet` so the next round or the owner can resume without losing state. Ending on `Revise`, `Blocked`, or `Pass under assumptions` with a clear packet is a valid, honest stopping point; forcing `Pass` is not.
+
 ## Output Policy
 
-Start with a decision layer for users who may be outside the domain:
+The primary audience is often a non-expert who cannot judge domain detail and is relying on an agent for unfamiliar work. Lead with a short plain-language verdict in the user's language, then place technical detail and gate tables below it as supporting evidence. Never make the user read tables to learn whether they can proceed.
 
-1. decision and whether implementation can start;
+### Plain-Language Verdict (always first)
+
+Keep this to a few short lines, in the user's language, with no unexplained jargon. Include the go/no-go answer, safe next action, forbidden action, biggest risk, any real owner or evidence confirmation needed, and a one-time gloss for any English decision label. Use the canonical verdict shape in `references/output-templates.md` when output structure matters.
+
+After the verdict, include a compact `Next Review Plan` whenever the decision is `Revise`, `Blocked`, `Pass under assumptions`, or the user asks how to keep refining. It must name the highest-leverage refinement direction, evidence or owner confirmation needed, and next review mode. Derive it from open `Blocker`/`Major` findings, pass conditions, evidence gaps, or the refined plan; do not write generic advice such as "improve validation" without naming the concrete mechanism or artifact.
+
+Use the Implementation Readiness Score from `references/quality-gates.md` only for implementation-readiness, pass-like, revise/blocked, multi-round, or user-requested scoring decisions. Do not invent a second score, and never let a high score override an unresolved `Blocker` or `Major`.
+
+### Supporting Detail (after the verdict)
+
+Include only what the risk justifies:
+
+1. decision label and whether implementation can start;
 2. allowed and forbidden next actions;
 3. top risks and red lines;
 4. evidence or owner confirmations required;
 5. review coverage and biggest blind spot when risk is material;
-6. technical findings and rewritten plan;
-7. implementation-conformance requirement if later code or changes will be produced;
-8. continuation packet when the decision is conditional, blocked, or revise-only.
+6. next review plan when further refinement is needed;
+7. technical findings and rewritten plan;
+8. implementation-conformance requirement if later code or changes will be produced;
+9. continuation packet when the decision is conditional, blocked, or revise-only.
 
-Use compact output for low-risk plans. Use full output for high-risk, unfamiliar-domain, repository-backed, data-changing, security-sensitive, public-contract, production-impacting, external-dependency-sensitive, or agent-generated implementation plans. In non-expert contexts, never hide conditionality behind the word `Pass`; state the implementation permission explicitly.
+Use compact output for low-risk plans. Use full output for high-risk, unfamiliar-domain, repository-backed, data-changing, security-sensitive, public-contract, production-impacting, external-dependency-sensitive, or agent-generated implementation plans. Even in full output, keep gate matrices, coverage tables, ledgers, and stress tests as supporting evidence below the plain-language verdict; in non-expert contexts, summarize them in plain language instead of making raw tables the primary answer. Never hide conditionality behind the word `Pass`; state the implementation permission explicitly.
 
 ## Hard Rules
 
@@ -245,4 +306,6 @@ Use compact output for low-risk plans. Use full output for high-risk, unfamiliar
 - Do not treat simulated expert-panel review as a substitute for a real owner, operator, security/privacy/compliance reviewer, domain SME, or external partner when escalation triggers apply.
 - For high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions, include review coverage and the biggest blind spot.
 - Do not present `Pass under assumptions` as permission for full implementation; state allowed and forbidden work explicitly.
+- For high-risk pass-like decisions, apply `references/falsification-gate.md`: pre-register the deadliest failure before deciding, attempt to disprove it with the cheapest real probe or an independent adversary, and do not issue absolute `Pass` on a kill-shot that was only argued, skipped, or left untestable; an untested kill-shot caps the decision at `Pass under assumptions`.
+- Lead non-expert-facing output with the plain-language verdict; do not bury the go/no-go decision or the implementation permission under gate tables, coverage tables, ledgers, or stress tests, and gloss each English decision label once in plain language.
 - Do not omit the continuation packet when a review ends with open blockers, majors, assumptions, evidence gaps, owner confirmations, or the current response stops before absolute `Pass`.

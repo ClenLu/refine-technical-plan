@@ -4,6 +4,46 @@ Use these templates as response shapes. Keep the content in the user's language 
 
 Select the lightest template that satisfies the request.
 
+The tables and blocks here are copy shapes only. The authoritative semantics and pass/fail rules for each shared structure (gate matrix, review coverage, freshness gate, repository ledger, diff-to-plan mapping, continuation packet, and so on) live in their owning reference; see the Single Source of Truth map in `SKILL.md`. When a rule or column changes, edit the owner, not these copies. This file owns only the plain-language verdict and decision-label glossary below.
+
+## Plain-Language Verdict (Non-Expert Lead)
+
+Every formal review template must begin with this block. It is written for a user who cannot judge domain detail. Keep it to a few short lines, in the user's language, with no unexplained jargon. Place gate tables, coverage tables, ledgers, and stress tests after it as supporting evidence, never before it.
+
+```markdown
+**结论**
+- 能不能开始做：能 / 能，但要把提示项记下来 / 现在只能做可回退的验证 / 还不行
+- 现在可以安全做：<一句话>
+- 现在先别做：<一句话>
+- 最大的风险：<一句平实的话>
+- 需要先确认/核对的一件事：<谁来确认，或去查什么；没有就写"无">
+- 决策标签：<English label>（<平文注释>）
+- 打磨后评分：<0-100 或 N/A>（信心 Low/Medium/High；有上一轮时写"打磨前 <0-100> → 打磨后 <0-100>"）；一句话说明分数被什么拉低，或说明为什么本轮不评分
+```
+
+The score is the Implementation Readiness Score defined in `references/quality-gates.md`; do not invent a second scale. It is required for implementation-readiness, pass-like, revise/blocked, multi-round, or user-requested scoring decisions. For tiny discovery or evidence-collection replies where scoring would add false precision, use `N/A` and say why. A plan with an unresolved `Blocker` or `Major` cannot be scored implementation-ready no matter how high the number looks. Show the before→after delta only when a prior-round score exists; otherwise show the current score alone.
+
+## Next Review Plan
+
+Use this block when the decision is `Revise`, `Blocked`, `Pass under assumptions`, or the user asks how to continue refining. Keep it compact and concrete. It must come from the current findings, pass conditions, evidence gaps, or refined plan; do not give generic process advice.
+
+```markdown
+**Next Review Plan**
+- 优先修改方向：<1-3 个最高杠杆改动，例如补 caller inventory、收窄 rollout、改 rollback、拆迁移步骤、找 owner 确认>
+- 需要补的证据：<具体 artifact、命令、owner 确认、dry-run、测试、截图、日志；没有就写"无">
+- 下一轮审查模式：Review-only / Rewrite / Delta review / Evidence-collection / Validation-evidence / Implementation-conformance
+```
+
+### Decision Label Glossary
+
+Gloss the English label once per response for non-expert readers:
+
+- `Pass` = 通过：可以按方案开始实现，保留好要求的验证证据。
+- `Pass with notes` = 通过（带提示）：可以开始，但提示项必须记录跟踪或转成明确接受的风险。
+- `Pass under assumptions` = 有条件通过：现在只能做调研/试点/可回退的验证或找 owner 确认，不能上线、不能做不可逆改动。
+- `Revise` = 需修改：先按要求改方案或做降风险的工作，不要照原方案全量实现。
+- `Blocked` = 阻塞：缺关键信息，需要先收集证据或找 owner 确认，不能靠猜继续。
+
 ## Detail Levels
 
 ### Tiny
@@ -12,6 +52,7 @@ Use for low-risk, docs-only, local, reversible work.
 
 Include only:
 
+- plain-language verdict (always first);
 - decision;
 - material findings;
 - required changes or final plan;
@@ -23,6 +64,7 @@ Use for normal technical plans with moderate risk.
 
 Include:
 
+- plain-language verdict (always first);
 - decision;
 - non-expert control summary when relevant;
 - context and evidence summary;
@@ -35,8 +77,9 @@ Include:
 
 Use for high-risk, unfamiliar-domain, repository-backed, data-changing, security-sensitive, public-contract, production-impacting, AI/agent, or implementation-conformance reviews.
 
-Include:
+Include (plain-language verdict first, heavy tables below as supporting evidence):
 
+- plain-language verdict (always first);
 - decision and allowed next action;
 - non-expert control summary;
 - repository inspection ledger when material;
@@ -46,17 +89,21 @@ Include:
 - gate evidence matrix;
 - final plan or required changes;
 - adversarial review and pre-pass stress test;
+- falsification / kill-shot for high-risk plans (see `references/falsification-gate.md`);
 - implementation readiness;
 - implementation conformance requirement;
 - freshness / external authority check when material;
 - review coverage and biggest blind spot;
 - owner / SME escalation status when triggers apply;
 - remaining risks and next step;
+- next review plan when further refinement is needed;
 - continuation packet when the decision is `Revise`, `Blocked`, `Pass under assumptions`, or stops with open evidence.
 
 ## Automatic Multi-Round Review
 
 ```markdown
+<Start with the Plain-Language Verdict block above.>
+
 **Decision Summary**
 - Decision: Pass | Pass under assumptions | Pass with notes | Revise | Blocked
 - Can implementation start: Yes / No / Discovery only / Only after listed validation or owner confirmation
@@ -153,6 +200,7 @@ Use only when material expert roles disagree.
 | External authority / freshness |  | Pass/Revise/N/A |
 | Real owner / SME escalation |  | Pass/Revise/N/A |
 | Review coverage |  | Pass/Revise/N/A |
+| Falsification / kill-shot (high-risk) |  | Killed/Survived/Untestable/N/A |
 | Technical debt control |  | Pass/Revise/N/A |
 
 **Final Plan**
@@ -164,6 +212,19 @@ Use only when material expert roles disagree.
 - Hardest-to-detect technical-debt failure: ...
 - Invalidating assumption: ...
 - False-positive test risk: ...
+
+**Falsification / Kill-Shot**
+Use for high-risk pass-like decisions. Canonical rules: `references/falsification-gate.md`.
+- Pre-registered lethal failure: ...
+- Mechanism: ...
+- Observable signal: ...
+- Falsifiable prediction: if <probe>, then <result proving the failure is real>
+- Cheapest disconfirming probe: repo / data / behavior / independent subagent
+- Attempt run: <exact command, query, test, or subagent task>
+- Raw result: ...
+- Verdict: Killed / Survived (empirical) / Untestable here
+- Independence: Independent subagent / Self-run (correlated-failure limitation)
+- Decision impact: ...
 
 **Implementation Readiness**
 - Score: <0-100>
@@ -180,17 +241,14 @@ Use only when material expert roles disagree.
 **Pass Conditions / Next Step**
 - ...
 
+**Next Review Plan**
+Use when the decision is conditional, blocked, revise-only, or the user wants to keep refining.
+- 优先修改方向：...
+- 需要补的证据：...
+- 下一轮审查模式：...
+
 **Continuation Packet**
-Use when the decision is conditional, blocked, revise-only, or stops with open evidence.
-- Current decision: ...
-- Implementation permission: Full implementation / Notes tracked / Discovery only / No implementation
-- Open blockers: ...
-- Open majors: ...
-- Open assumptions or evidence gaps: ...
-- Required external authority or owner confirmation: ...
-- Do not change: ...
-- Next review mode: ...
-- Paste this into the next agent or next round: ...
+Use the canonical packet from `SKILL.md` when the decision is conditional, blocked, revise-only, or stops with open evidence. Include the refined score line when scoring was applicable.
 ```
 
 Remove empty sections when they are not relevant. Do not include `Repository Inspection Ledger` if no repository context exists; instead state that the decision is not repository-backed.
@@ -277,10 +335,7 @@ Blocked | Revise | Pass under assumptions
 - Current official external authority, pinned-version evidence, owner confirmation, validation evidence, or production observation needed to move from assumption-backed to pass-like status.
 
 **Continuation Packet**
-- Current decision: ...
-- Open evidence gaps: ...
-- Exact evidence to collect next: ...
-- Forbidden work until collected: ...
+Use the canonical packet from `SKILL.md`, focused on open evidence gaps and forbidden work until collected.
 ```
 
 ## Validation Evidence Review
@@ -346,15 +401,7 @@ Use this compact add-on for conditional or multi-round reviews.
 - What would most improve confidence: ...
 
 **Continuation Packet**
-- Current decision: Pass / Pass with notes / Pass under assumptions / Revise / Blocked
-- Implementation permission: Full implementation / Notes tracked / Discovery only / No implementation
-- Open blockers: ...
-- Open majors: ...
-- Open assumptions or evidence gaps: ...
-- Required external authority or owner confirmation: ...
-- Do not change: ...
-- Next review mode: Review-only / Rewrite / Delta review / Evidence-collection / Validation-evidence / Implementation-conformance
-- Paste this into the next agent or next round: ...
+Use the canonical packet from `SKILL.md`, preserving open blockers, majors, assumptions, evidence gaps, owner confirmations, next review mode, and refined score when applicable.
 ```
 
 ## Document Update Response

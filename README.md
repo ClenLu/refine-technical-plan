@@ -26,7 +26,7 @@ npx skills add ClenLu/refine-technical-plan --skill refine-technical-plan -g -a 
 
 Restart Codex or reload skills if your environment requires it.
 
-The installable skill lives under [`skills/refine-technical-plan/`](./skills/refine-technical-plan/). Keeping the full skill in that directory ensures `npx skills add` installs `SKILL.md` together with its bundled `references/`, `evals/`, and `agents/` files.
+The installable skill lives under [`skills/refine-technical-plan/`](./skills/refine-technical-plan/). Keeping the runtime skill in that directory ensures `npx skills add` installs `SKILL.md` together with its bundled `references/` and `agents/` files.
 
 ## Usage
 
@@ -44,8 +44,6 @@ After implementation, ask it to compare the produced code, config, migration, pr
 Use $refine-technical-plan to run implementation conformance review for this diff against the approved plan.
 ```
 
-When changing the skill itself, use the lightweight evals under [`skills/refine-technical-plan/evals/`](./skills/refine-technical-plan/evals/) to check trigger behavior, decision labels, evidence gates, repository-aware review, and implementation conformance behavior.
-
 ## Repository Structure
 
 ```text
@@ -55,15 +53,10 @@ When changing the skill itself, use the lightweight evals under [`skills/refine-
 │       ├── SKILL.md
 │       ├── agents/
 │       │   └── openai.yaml
-│       ├── evals/
-│       │   ├── README.md
-│       │   ├── cases.jsonl
-│       │   ├── manual-eval-spec.yaml
-│       │   ├── rubric.md
-│       │   └── trigger-tests.md
 │       └── references/
 │           ├── domain-packs.md
 │           ├── document-template.md
+│           ├── falsification-gate.md
 │           ├── implementation-conformance.md
 │           ├── output-templates.md
 │           ├── quality-gates.md

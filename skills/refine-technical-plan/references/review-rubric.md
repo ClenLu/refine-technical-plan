@@ -277,12 +277,3 @@ When the user is likely outside the domain, provide a short control summary:
 - The simplest next instruction the user should give to a later implementation agent.
 
 Keep this brief separate from the technical plan so it helps the user steer future agent work without pretending to be an expert.
-
-
-## Calibration Examples and Evals
-
-Use `examples/` and `evals/` only for skill maintenance, regression testing, or reviewer calibration. They are not user-facing templates and should not be loaded during normal reviews unless the current task is to modify or validate the skill itself.
-
-- Use examples to compare good and bad decision patterns.
-- Use evals to check trigger behavior, decision-label discipline, evidence requirements, and conformance-review behavior after changes to this skill.
-- When an eval conflicts with the current user artifact, prefer the current artifact and the quality gates; evals are calibration aids, not source-of-truth facts.

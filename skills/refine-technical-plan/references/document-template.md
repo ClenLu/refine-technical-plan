@@ -4,6 +4,8 @@ Use this template when writing or updating a durable plan document, especially u
 
 The document should make the final decision executable by someone who did not read the prior conversation. It should preserve material review decisions, repository evidence, assumptions, accepted risks, validation requirements, and implementation-conformance requirements without turning every intermediate critique into permanent documentation.
 
+The section tables below are copy shapes for a durable document. The authoritative semantics and pass/fail rules for each shared structure (gate matrix, review coverage, freshness gate, repository ledger, diff-to-plan mapping, continuation packet, and so on) live in their owning reference; see the Single Source of Truth map in `SKILL.md`. When a rule or column changes, edit the owner, not these copies.
+
 ## Recommended Structure
 
 ```markdown
@@ -343,15 +345,7 @@ Remaining accepted risks:
 
 Use when the document represents a conditional, blocked, revise-only, or multi-round state.
 
-- Current decision:
-- Implementation permission: Full implementation / Notes tracked / Discovery only / No implementation
-- Open blockers:
-- Open majors:
-- Open assumptions or evidence gaps:
-- Required external authority or owner confirmation:
-- Do not change:
-- Next review mode:
-- Paste this into the next agent or next round:
+Use the canonical Continuation Packet fields from `SKILL.md`, including current decision, refined score when applicable, implementation permission, open blockers/majors, open assumptions or evidence gaps, required owner/evidence confirmation, constraints that must not change, next review mode, and a paste-ready handoff.
 
 ## 25. Non-Expert Decision Brief
 
