@@ -272,7 +272,7 @@ When the user is likely outside the domain, provide a short control summary:
 - Red lines that must not be accepted.
 - Tradeoffs that are acceptable only if owned and bounded.
 - Questions requiring real owner, code, production, business, security/privacy/compliance, data, billing, legal/policy, or external-partner confirmation.
-- Whether `Pass under assumptions` means discovery/validation only rather than full implementation approval.
+- Whether a conditional decision means discovery/validation only rather than full implementation approval.
 - Evidence a later agent implementation must preserve: repository inspection ledger, diff-to-plan mapping, tests, contracts, screenshots, dry-runs, dashboards, logs, eval results, rollback proof, cleanup trigger, or acceptance artifacts.
 - The simplest next instruction the user should give to a later implementation agent.
 

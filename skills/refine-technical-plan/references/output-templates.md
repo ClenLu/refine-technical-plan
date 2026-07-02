@@ -1,10 +1,10 @@
 # Output Templates
 
-Use these templates as response shapes. Keep the content in the user's language unless the user requests another language. Keep decision labels in English.
+Use these templates as response shapes. Keep all user-facing content in the user's language unless the user requests another language. Localize headings, field names, decision labels, severity labels, confidence labels, and review-mode names. Do not copy English labels into non-English output except for code identifiers, commands, file paths, API/model/product names, exact external terms, or machine-oriented handoff labels that must remain exact.
 
 Select the lightest template that satisfies the request.
 
-The tables and blocks here are copy shapes only. The authoritative semantics and pass/fail rules for each shared structure (gate matrix, review coverage, freshness gate, repository ledger, diff-to-plan mapping, continuation packet, and so on) live in their owning reference; see the Single Source of Truth map in `SKILL.md`. When a rule or column changes, edit the owner, not these copies. This file owns only the plain-language verdict and decision-label glossary below.
+The tables and blocks here are copy shapes only. The authoritative semantics and pass/fail rules for each shared structure (gate matrix, review coverage, freshness gate, repository ledger, diff-to-plan mapping, continuation packet, and so on) live in their owning reference; see the Single Source of Truth map in `SKILL.md`. When a rule or column changes, edit the owner, not these copies. This file owns only the plain-language verdict and localized decision-label guidance below.
 
 ## Plain-Language Verdict (Non-Expert Lead)
 
@@ -17,32 +17,34 @@ Every formal review template must begin with this block. It is written for a use
 - 现在先别做：<一句话>
 - 最大的风险：<一句平实的话>
 - 需要先确认/核对的一件事：<谁来确认，或去查什么；没有就写"无">
-- 决策标签：<English label>（<平文注释>）
-- 打磨后评分：<0-100 或 N/A>（信心 Low/Medium/High；有上一轮时写"打磨前 <0-100> → 打磨后 <0-100>"）；一句话说明分数被什么拉低，或说明为什么本轮不评分
+- 决策：<通过 / 通过（带提示）/ 有条件通过 / 需修改 / 阻塞>（<一句话说明含义>）
+- 打磨后评分：<0-100 或不评分>（信心：低 / 中 / 高；有上一轮时写"打磨前 <0-100> → 打磨后 <0-100>"）；一句话说明分数被什么拉低，或说明为什么本轮不评分
 ```
 
-The score is the Implementation Readiness Score defined in `references/quality-gates.md`; do not invent a second scale. It is required for implementation-readiness, pass-like, revise/blocked, multi-round, or user-requested scoring decisions. For tiny discovery or evidence-collection replies where scoring would add false precision, use `N/A` and say why. A plan with an unresolved `Blocker` or `Major` cannot be scored implementation-ready no matter how high the number looks. Show the before→after delta only when a prior-round score exists; otherwise show the current score alone.
+The score is the Implementation Readiness Score defined in `references/quality-gates.md`; do not invent a second scale. It is required for implementation-readiness, pass-like, revise/blocked, multi-round, or user-requested scoring decisions. Localize confidence labels and "not scored" text. For tiny discovery or evidence-collection replies where scoring would add false precision, use a localized "not scored" value and say why. A plan with an unresolved blocker or major issue cannot be scored implementation-ready no matter how high the number looks. Show the before→after delta only when a prior-round score exists; otherwise show the current score alone.
 
-## Next Review Plan
+## 下一轮打磨计划
 
 Use this block when the decision is `Revise`, `Blocked`, `Pass under assumptions`, or the user asks how to continue refining. Keep it compact and concrete. It must come from the current findings, pass conditions, evidence gaps, or refined plan; do not give generic process advice.
 
 ```markdown
-**Next Review Plan**
+**下一轮打磨计划**
 - 优先修改方向：<1-3 个最高杠杆改动，例如补 caller inventory、收窄 rollout、改 rollback、拆迁移步骤、找 owner 确认>
 - 需要补的证据：<具体 artifact、命令、owner 确认、dry-run、测试、截图、日志；没有就写"无">
-- 下一轮审查模式：Review-only / Rewrite / Delta review / Evidence-collection / Validation-evidence / Implementation-conformance
+- 下一轮审查模式：仅审查 / 重写方案 / 增量复审 / 证据收集 / 验证证据审查 / 实现一致性审查
 ```
 
-### Decision Label Glossary
+### Localized Decision Labels
 
-Gloss the English label once per response for non-expert readers:
+Use localized labels in user-facing output. For Chinese output, use these labels:
 
-- `Pass` = 通过：可以按方案开始实现，保留好要求的验证证据。
-- `Pass with notes` = 通过（带提示）：可以开始，但提示项必须记录跟踪或转成明确接受的风险。
-- `Pass under assumptions` = 有条件通过：现在只能做调研/试点/可回退的验证或找 owner 确认，不能上线、不能做不可逆改动。
-- `Revise` = 需修改：先按要求改方案或做降风险的工作，不要照原方案全量实现。
-- `Blocked` = 阻塞：缺关键信息，需要先收集证据或找 owner 确认，不能靠猜继续。
+- 通过：可以按方案开始实现，保留好要求的验证证据。
+- 通过（带提示）：可以开始，但提示项必须记录跟踪或转成明确接受的风险。
+- 有条件通过：现在只能做调研、试点、可回退验证，或找负责人确认；不能上线，不能做不可逆改动。
+- 需修改：先按要求改方案或做降风险工作，不要照原方案全量实现。
+- 阻塞：缺关键信息，需要先收集证据或找负责人确认，不能靠猜继续。
+
+Keep canonical English labels for internal continuity only. In non-English user-facing output, do not make the canonical label the visible decision.
 
 ## Detail Levels
 
@@ -102,256 +104,256 @@ Include (plain-language verdict first, heavy tables below as supporting evidence
 ## Automatic Multi-Round Review
 
 ```markdown
-<Start with the Plain-Language Verdict block above.>
+<先使用上方的结论块。>
 
-**Decision Summary**
-- Decision: Pass | Pass under assumptions | Pass with notes | Revise | Blocked
-- Can implementation start: Yes / No / Discovery only / Only after listed validation or owner confirmation
-- Allowed next action: ...
-- Forbidden next action: ...
-- Reason: ...
-- Highest current risk: ...
-- If decision is `Pass under assumptions`: Implementation permission is **not full approval**; allowed work is discovery/spike/validation/owner confirmation/reversible guarded work only.
+**决策摘要**
+- 决策：通过 / 有条件通过 / 通过（带提示） / 需修改 / 阻塞
+- 是否可以开始实现：可以 / 不可以 / 只能做调研或验证 / 只能在完成列出的验证或负责人确认后开始
+- 允许的下一步：...
+- 暂时禁止：...
+- 理由：...
+- 当前最高风险：...
+- 如果决策是“有条件通过”：这不是完整实现许可；现在只允许调研、试点、验证、负责人确认或可回退的小范围工作。
 
-**Non-Expert Control Summary**
-- Top 3 things to watch: ...
-- Red lines that must not be accepted: ...
-- Acceptable tradeoffs: ...
-- Questions requiring real owner, code, production, business, security/privacy/compliance, or external-partner confirmation: ...
-- Owner / SME escalation triggers to watch: ...
-- Evidence future implementation must preserve: ...
+**非专业用户控制摘要**
+- 最需要盯住的 3 件事：...
+- 不能接受的红线：...
+- 可以接受但必须有边界的取舍：...
+- 需要代码、生产、业务、负责人、安全、隐私、合规或外部伙伴确认的问题：...
+- 需要升级给负责人或专家的触发条件：...
+- 后续实现必须保留的证据：...
 
-**Context and Evidence**
-- Artifact: ...
-- Change type: ...
-- Affected surface: ...
-- Implementation state: ...
-- Evidence used: ...
-- Assumptions / unknowns: ...
-- External technical dependencies: ...
-- Blast radius: Low / Medium / High
-- Reversibility: Reversible / Partially reversible / Irreversible
+**上下文与证据**
+- 审查对象：...
+- 变更类型：...
+- 影响面：...
+- 实现状态：...
+- 已使用证据：...
+- 假设或未知项：...
+- 外部技术依赖：...
+- 影响范围：低 / 中 / 高
+- 可回退性：可回退 / 部分可回退 / 不可回退
 
-**Freshness / External Authority Check**
-Use when material.
-| External Claim | Source Needed / Used | Status | Decision Impact |
+**外部依据与时效性检查**
+有实质影响时使用。
+| 外部事实或依赖 | 需要或已使用的来源 | 状态 | 对决策的影响 |
 | --- | --- | --- | --- |
-|  | Official-current / Official-versioned / Repo-pinned / Owner-confirmed / Assumption-backed / Stale-unverified |  |  |
+|  | 官方当前依据 / 官方版本依据 / 仓库锁定版本 / 负责人确认 / 假设支撑 / 过期或未验证 |  |  |
 
-**Real Expert / Owner Escalation**
-Use when escalation triggers apply.
-- Required real confirmation: None / Domain owner / Operator / Security / Privacy / Compliance / Product / Data / Billing / External partner / Other
-- Why required: ...
-- Current status: Confirmed / Missing / Not applicable
-- Decision impact: ...
+**负责人或专家确认**
+触发升级条件时使用。
+- 必需确认方：无 / 领域负责人 / 运维负责人 / 安全 / 隐私 / 合规 / 产品 / 数据 / 计费 / 外部伙伴 / 其他
+- 为什么需要：...
+- 当前状态：已确认 / 缺失 / 不适用
+- 对决策的影响：...
 
-**Review Coverage**
-| Coverage Area | Rating | Evidence / Gap | Decision Impact |
+**审查覆盖度**
+| 覆盖领域 | 覆盖程度 | 证据或缺口 | 对决策的影响 |
 | --- | --- | --- | --- |
-| Repository coverage | High / Medium / Low / N/A |  |  |
-| Domain coverage | High / Medium / Low |  |  |
-| External authority / freshness coverage | High / Medium / Low / N/A |  |  |
-| Validation coverage | High / Medium / Low / None |  |  |
-| Owner / production confirmation coverage | Present / Partial / Missing / N/A |  |  |
-| Implementation conformance coverage | High / Medium / Low / N/A |  |  |
+| 仓库覆盖 | 高 / 中 / 低 / 不适用 |  |  |
+| 领域覆盖 | 高 / 中 / 低 |  |  |
+| 外部依据与时效性覆盖 | 高 / 中 / 低 / 不适用 |  |  |
+| 验证覆盖 | 高 / 中 / 低 / 无 |  |  |
+| 负责人或生产确认覆盖 | 已有 / 部分 / 缺失 / 不适用 |  |  |
+| 实现一致性覆盖 | 高 / 中 / 低 / 不适用 |  |  |
 
-- Biggest blind spot: ...
-- What would most improve confidence: ...
-- Backing type: repository-backed / validation-backed / owner-backed / production-backed / external-authority-backed / assumption-backed
+- 最大盲点：...
+- 最能提高信心的动作：...
+- 结论依据类型：仓库支撑 / 验证支撑 / 负责人支撑 / 生产支撑 / 外部依据支撑 / 假设支撑
 
-**Repository Inspection Ledger**
-| Area | Paths / Commands / Search Terms | Why Inspected | Finding | Confidence |
+**仓库检查记录**
+| 检查领域 | 路径 / 命令 / 搜索词 | 检查原因 | 发现 | 信心 |
 | --- | --- | --- | --- | --- |
 
-**Review Rounds**
-- Round 1: <finding summary> -> <change made>
-- Round 2: <finding summary> -> <change made>
-- Round 3: <final gate result>
+**审查轮次**
+- 第 1 轮：<发现摘要> -> <已做调整>
+- 第 2 轮：<发现摘要> -> <已做调整>
+- 第 3 轮：<最终门禁结果>
 
-**Severity Findings**
-| ID | Severity | Finding | Evidence / Assumption | Required Change | Status |
+**问题分级**
+| 编号 | 严重程度 | 发现 | 证据或假设 | 必需修改 | 状态 |
 | --- | --- | --- | --- | --- | --- |
-| B-001 / M-001 / A-001 / E-001 / R-001 | Blocker/Major/Minor/Accepted Risk |  |  |  | Open/Resolved/Accepted |
+| B-001 / M-001 / A-001 / E-001 / R-001 | 阻塞 / 主要 / 次要 / 已接受风险 |  |  |  | 未解决 / 已解决 / 已接受 |
 
-**Evidence Collection Plan**
-| Missing Evidence | Why It Matters | How To Collect | Owner / Source | Decision Impact | Can Implementation Start? |
+**证据收集计划**
+| 缺失证据 | 为什么重要 | 如何收集 | 负责人或来源 | 对决策的影响 | 是否能开始实现 |
 | --- | --- | --- | --- | --- | --- |
 
-**Disagreement Resolution**
-Use only when material expert roles disagree.
-- Conflicting recommendations: ...
-- Risk or invariant each protects: ...
-- Blast radius / reversibility / validation strength: ...
-- Chosen path: ...
-- Rejected options / accepted risks: ...
+**分歧处理**
+只有关键角色建议冲突时使用。
+- 冲突建议：...
+- 每个建议保护的风险或不变量：...
+- 影响范围 / 可回退性 / 验证强度：...
+- 选择的路径：...
+- 拒绝的选项或接受的风险：...
 
-**Gate Evidence Matrix**
-| Gate | Evidence / Assumption / Validation | Status |
+**门禁证据矩阵**
+| 门禁 | 证据 / 假设 / 验证 | 状态 |
 | --- | --- | --- |
-| Scope |  | Pass/Revise/N/A |
-| Boundary |  | Pass/Revise/N/A |
-| Contracts |  | Pass/Revise/N/A |
-| State/Migration |  | Pass/Revise/N/A |
-| Failure behavior |  | Pass/Revise/N/A |
-| Observability |  | Pass/Revise/N/A |
-| Validation |  | Pass/Revise/N/A |
-| Rollout/Rollback |  | Pass/Revise/N/A |
-| Security/Privacy |  | Pass/Revise/N/A |
-| External authority / freshness |  | Pass/Revise/N/A |
-| Real owner / SME escalation |  | Pass/Revise/N/A |
-| Review coverage |  | Pass/Revise/N/A |
-| Falsification / kill-shot (high-risk) |  | Killed/Survived/Untestable/N/A |
-| Technical debt control |  | Pass/Revise/N/A |
+| 范围 |  | 通过 / 需修改 / 不适用 |
+| 边界 |  | 通过 / 需修改 / 不适用 |
+| 契约 |  | 通过 / 需修改 / 不适用 |
+| 状态或迁移 |  | 通过 / 需修改 / 不适用 |
+| 失败行为 |  | 通过 / 需修改 / 不适用 |
+| 可观测性 |  | 通过 / 需修改 / 不适用 |
+| 验证 |  | 通过 / 需修改 / 不适用 |
+| 发布与回滚 |  | 通过 / 需修改 / 不适用 |
+| 安全与隐私 |  | 通过 / 需修改 / 不适用 |
+| 外部依据与时效性 |  | 通过 / 需修改 / 不适用 |
+| 负责人或专家升级 |  | 通过 / 需修改 / 不适用 |
+| 审查覆盖 |  | 通过 / 需修改 / 不适用 |
+| 反证检查（高风险） |  | 已证伪 / 已存活 / 当前不可测试 / 不适用 |
+| 技术债控制 |  | 通过 / 需修改 / 不适用 |
 
-**Final Plan**
-<polished plan or required revision direction>
+**最终方案**
+<打磨后的方案或必需修改方向>
 
-**Adversarial Review and Pre-Pass Stress Test**
-- Most likely failure: ...
-- Most expensive or user-visible failure: ...
-- Hardest-to-detect technical-debt failure: ...
-- Invalidating assumption: ...
-- False-positive test risk: ...
+**对抗审查与通过前压力测试**
+- 最可能失败的场景：...
+- 代价最高或用户最明显感知的失败：...
+- 最难发现的技术债失败：...
+- 会推翻方案的假设：...
+- 可能误导人的测试通过风险：...
 
-**Falsification / Kill-Shot**
-Use for high-risk pass-like decisions. Canonical rules: `references/falsification-gate.md`.
-- Pre-registered lethal failure: ...
-- Mechanism: ...
-- Observable signal: ...
-- Falsifiable prediction: if <probe>, then <result proving the failure is real>
-- Cheapest disconfirming probe: repo / data / behavior / independent subagent
-- Attempt run: <exact command, query, test, or subagent task>
-- Raw result: ...
-- Verdict: Killed / Survived (empirical) / Untestable here
-- Independence: Independent subagent / Self-run (correlated-failure limitation)
-- Decision impact: ...
+**反证检查**
+高风险且接近通过时使用。规则来源：`references/falsification-gate.md`。
+- 预先登记的致命失败：...
+- 发生机制：...
+- 可观察信号：...
+- 可证伪预测：如果运行 <探针>，会看到 <证明失败真实存在的结果>
+- 最便宜的反证探针：仓库 / 数据 / 行为 / 独立子任务
+- 实际尝试：<具体命令、查询、测试或子任务>
+- 原始结果：...
+- 结论：已证伪 / 已存活（有实证） / 当前不可测试
+- 独立性：独立子任务 / 自己运行（存在相关性失败风险）
+- 对决策的影响：...
 
-**Implementation Readiness**
-- Score: <0-100>
-- Confidence: Low / Medium / High
-- Reason: ...
+**实现准备度**
+- 评分：<0-100>
+- 信心：低 / 中 / 高
+- 理由：...
 
-**Implementation Conformance Requirement**
-- Conformance review required after implementation: Yes / No
-- Evidence implementation must preserve: ...
+**实现一致性要求**
+- 实现后是否需要一致性审查：是 / 否
+- 实现时必须保留的证据：...
 
-**Remaining Risks**
+**剩余风险**
 - ...
 
-**Pass Conditions / Next Step**
+**通过条件或下一步**
 - ...
 
-**Next Review Plan**
-Use when the decision is conditional, blocked, revise-only, or the user wants to keep refining.
+**下一轮打磨计划**
+决策有条件、阻塞、需修改，或用户想继续打磨时使用。
 - 优先修改方向：...
 - 需要补的证据：...
 - 下一轮审查模式：...
 
-**Continuation Packet**
-Use the canonical packet from `SKILL.md` when the decision is conditional, blocked, revise-only, or stops with open evidence. Include the refined score line when scoring was applicable.
+**继续交接包**
+决策有条件、阻塞、需修改，或仍有证据缺口时，使用 `SKILL.md` 中的规范字段；如果本轮评分适用，保留打磨后评分。
 ```
 
-Remove empty sections when they are not relevant. Do not include `Repository Inspection Ledger` if no repository context exists; instead state that the decision is not repository-backed.
+Remove empty sections when they are not relevant. For non-English output, localize section headings and option values. Do not include a repository inspection ledger if no repository context exists; instead state in the user's language that the decision is not repository-backed.
 
 ## Single-Round Review
 
 ```markdown
-**Decision**
-Revise | Pass under assumptions | Pass with notes | Pass | Blocked
+**决策**
+需修改 / 有条件通过 / 通过（带提示） / 通过 / 阻塞
 
-**Reason**
+**理由**
 ...
 
-**Expert Review**
-- Architecture: ...
-- Domain: ...
-- Implementation: ...
-- Reliability/Security: ...
-- Product/Operations: ...
+**专家视角审查**
+- 架构：...
+- 领域：...
+- 实现：...
+- 可靠性与安全：...
+- 产品与运维：...
 
-**Required Fixes**
-- [Blocker/Major] <finding> (Evidence/Assumption: ...)
+**必需修改**
+- [阻塞/主要] <发现>（证据/假设：...）
 
-**Suggested Improvements**
-- [Minor] ...
+**建议改进**
+- [次要] ...
 
-**Pass Conditions**
+**通过条件**
 - ...
 ```
 
 ## Optimized Plan
 
 ```markdown
-**Goal**
+**目标**
 ...
 
-**Non-Goals**
+**非目标**
 ...
 
-**Evidence, Assumptions, and Unknowns**
+**证据、假设与未知项**
 ...
 
-**Target Design**
+**目标设计**
 ...
 
-**Implementation Stages**
+**实现阶段**
 1. ...
 2. ...
 
-**Validation and Acceptance**
+**验证与验收**
 ...
 
-**Rollout, Rollback, and Cleanup**
+**发布、回滚与清理**
 ...
 
-**Risks and Accepted Tradeoffs**
+**风险与已接受取舍**
 ...
 
-**Implementation Conformance Requirement**
+**实现一致性要求**
 ...
 ```
 
 ## Evidence Collection Mode
 
 ```markdown
-**Decision**
-Blocked | Revise | Pass under assumptions
+**决策**
+阻塞 / 需修改 / 有条件通过
 
-**Why Evidence Is Needed**
+**为什么需要证据**
 ...
 
-**Evidence Collection Plan**
-| Missing Evidence | Why It Matters | How To Collect | Owner / Source | Decision Impact | Can Implementation Start? |
+**证据收集计划**
+| 缺失证据 | 为什么重要 | 如何收集 | 负责人或来源 | 对决策的影响 | 是否能开始实现 |
 | --- | --- | --- | --- | --- | --- |
 
-**Allowed Work Before Evidence Is Collected**
+**证据收集前允许做的事**
 - ...
 
-**Forbidden Work Before Evidence Is Collected**
+**证据收集前禁止做的事**
 - ...
 
-**What Would Upgrade the Decision**
+**什么会提高决策等级**
 - ...
-- Current official external authority, pinned-version evidence, owner confirmation, validation evidence, or production observation needed to move from assumption-backed to pass-like status.
+- 需要当前官方依据、锁定版本证据、负责人确认、验证证据或生产观察，才能从假设支撑升级到接近通过。
 
-**Continuation Packet**
-Use the canonical packet from `SKILL.md`, focused on open evidence gaps and forbidden work until collected.
+**继续交接包**
+使用 `SKILL.md` 中的规范字段，重点保留未解决证据缺口和证据收集前禁止做的事。
 ```
 
 ## Validation Evidence Review
 
 ```markdown
-**Validation Decision**
-Validation-backed Pass | Still assumption-backed | Revise | Blocked
+**验证结论**
+验证支撑通过 / 仍由假设支撑 / 需修改 / 阻塞
 
-**Artifact Review**
-| Artifact | Claim Validated | What It Does Not Validate | Result | Decision Impact |
+**证据审查**
+| 证据产物 | 验证了什么主张 | 没有验证什么 | 结果 | 对决策的影响 |
 | --- | --- | --- | --- | --- |
 
-**Remaining Gaps**
+**剩余缺口**
 - ...
 
-**Updated Gate Decision**
+**更新后的门禁结论**
 - ...
 ```
 
@@ -360,48 +362,48 @@ Validation-backed Pass | Still assumption-backed | Revise | Blocked
 Use `references/implementation-conformance.md` for the full template.
 
 ```markdown
-**Implementation Conformance Decision**
-- Decision: Implementation Pass | Implementation Pass under assumptions | Revise implementation | Implementation Blocked
-- Merge/release allowed: Yes / No / Only after validation
-- Reason: ...
+**实现一致性结论**
+- 决策：实现通过 / 实现有条件通过 / 需修改实现 / 实现阻塞
+- 是否允许合并或发布：是 / 否 / 只能在完成验证后
+- 理由：...
 
-**Diff-to-Plan Mapping**
-| Changed Area / File | Approved Plan Section / Gate | Match? | Evidence | Notes |
+**变更与方案映射**
+| 变更区域或文件 | 已批准方案章节或门禁 | 是否匹配 | 证据 | 备注 |
 | --- | --- | --- | --- | --- |
 
-**Unplanned Changes**
-| Change | Risk | Severity | Required Action |
+**未计划变更**
+| 变更 | 风险 | 严重程度 | 必需动作 |
 | --- | --- | --- | --- |
 
-**Validation Evidence Check**
-| Required Evidence | Actual Artifact | Claim Validated | Result | Remaining Gap |
+**验证证据检查**
+| 必需证据 | 实际产物 | 验证的主张 | 结果 | 剩余缺口 |
 | --- | --- | --- | --- | --- |
 
-**Release / Rollback / Cleanup Check**
-- Rollout preserved: ...
-- Rollback still credible: ...
-- Observability present: ...
-- Cleanup trigger present: ...
+**发布、回滚与清理检查**
+- 发布路径是否保持：...
+- 回滚是否仍可信：...
+- 是否有可观测性：...
+- 是否有清理触发条件：...
 ```
 
 
-## Review Coverage and Continuation Packet
+## 审查覆盖度与继续交接包
 
 Use this compact add-on for conditional or multi-round reviews.
 
 ```markdown
-**Review Coverage**
-- Repository coverage: High / Medium / Low / N/A — ...
-- Domain coverage: High / Medium / Low — ...
-- External authority / freshness coverage: High / Medium / Low / N/A — ...
-- Validation coverage: High / Medium / Low / None — ...
-- Owner / production confirmation coverage: Present / Partial / Missing / N/A — ...
-- Implementation conformance coverage: High / Medium / Low / N/A — ...
-- Biggest blind spot: ...
-- What would most improve confidence: ...
+**审查覆盖度**
+- 仓库覆盖：高 / 中 / 低 / 不适用 — ...
+- 领域覆盖：高 / 中 / 低 — ...
+- 外部依据与时效性覆盖：高 / 中 / 低 / 不适用 — ...
+- 验证覆盖：高 / 中 / 低 / 无 — ...
+- 负责人或生产确认覆盖：已具备 / 部分 / 缺失 / 不适用 — ...
+- 实现一致性覆盖：高 / 中 / 低 / 不适用 — ...
+- 最大盲点：...
+- 最能提高信心的动作：...
 
-**Continuation Packet**
-Use the canonical packet from `SKILL.md`, preserving open blockers, majors, assumptions, evidence gaps, owner confirmations, next review mode, and refined score when applicable.
+**继续交接包**
+使用 `SKILL.md` 中的规范字段，保留未解决阻塞项、主要问题、假设、证据缺口、负责人确认、下一轮审查模式，以及适用时的打磨后评分。
 ```
 
 ## Document Update Response
@@ -409,12 +411,12 @@ Use the canonical packet from `SKILL.md`, preserving open blockers, majors, assu
 After updating a document, respond with:
 
 ```text
-Updated: <path>
-Decision: Pass / Pass under assumptions / Pass with notes / Revise / Blocked
-Main changes:
+已更新：<path>
+决策：通过 / 有条件通过 / 通过（带提示） / 需修改 / 阻塞
+主要变更：
 - <change>
-Remaining risks:
-- <risk or "No blocking risk">
-Next step:
+剩余风险：
+- <风险，或写"无阻塞风险">
+下一步：
 - <next step>
 ```

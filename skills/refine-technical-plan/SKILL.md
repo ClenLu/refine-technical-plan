@@ -36,7 +36,7 @@ Use this skill when the value needed is critique, evidence gating, safety judgme
 
 ## Operating Defaults
 
-- Reply in the user's language unless the user asks otherwise; keep canonical decision labels in English, but gloss each label once in plain language for non-expert readers.
+- Reply in the user's language unless the user asks otherwise. Localize user-facing headings, field names, decision labels, severity labels, confidence labels, and review-mode names. Do not mix English into non-English user-facing output except for code identifiers, commands, file paths, API/model/product names, exact external terms, or machine-oriented handoff labels that must remain exact.
 - Lead every review with a short plain-language verdict in the user's language; treat gate matrices, coverage tables, ledgers, and stress tests as supporting evidence placed after it, not as the primary answer. In non-expert contexts, summarize heavy tables in plain language rather than dumping raw tables as the main response.
 - Do not write implementation code unless the user explicitly asks for code.
 - Use the lightest review mode that satisfies the request.
@@ -191,7 +191,7 @@ Add specialized roles only when the plan justifies them, such as interface/contr
 
 ## Decision Labels
 
-Use these labels exactly:
+Use these canonical labels exactly for internal state tracking, issue continuity, and machine-oriented handoff:
 
 - `Pass`: full implementation may start, with required evidence preserved and conformance review after changes.
 - `Pass with notes`: implementation may start; notes must become tracked tasks or explicit accepted risks.
@@ -199,12 +199,20 @@ Use these labels exactly:
 - `Revise`: revise the plan or perform targeted risk-reduction work only.
 - `Blocked`: collect evidence, confirm owner/business facts, or reduce scope before continuing.
 
+For user-facing output, translate the labels into the user's language and make the translated label primary. For Chinese output, use:
+
+- `Pass`: 通过
+- `Pass with notes`: 通过（带提示）
+- `Pass under assumptions`: 有条件通过
+- `Revise`: 需修改
+- `Blocked`: 阻塞
+
 For high-risk plans, `Pass under assumptions` is not approval for irreversible, public-contract, data-changing, security-sensitive, or production-impacting implementation.
 
 
 Display `Pass under assumptions` as a conditional permission, not as full approval:
 
-- Implementation permission: **not full implementation approval**.
+- User-facing Chinese wording: 有条件通过不是完整实现许可。
 - Allowed: discovery, spike, validation, owner confirmation, or reversible guarded work.
 - Forbidden until assumptions are verified or accepted: production rollout, irreversible migration, public contract change, security-sensitive implementation, or high-risk data/state change.
 
@@ -222,20 +230,20 @@ Maintain a compact review ledger across turns:
 - evidence that changed the conclusion;
 - continuation packet from the prior response, if present.
 
-Output a `Continuation Packet` when the review is `Revise`, `Blocked`, `Pass under assumptions`, or when material evidence remains open after the current response limit:
+Output a localized continuation packet when the review is `Revise`, `Blocked`, `Pass under assumptions`, or when material evidence remains open after the current response limit. For Chinese output, use:
 
 ```markdown
-**Continuation Packet**
-- Current decision: Pass / Pass with notes / Pass under assumptions / Revise / Blocked
-- Refined score: prior <0-100> → current <0-100> (what caps it: ...)
-- Implementation permission: Full implementation / Tracked notes only / Discovery only / No implementation
-- Open blockers: B-...
-- Open majors: M-...
-- Open assumptions or evidence gaps: A-... / E-...
-- Required evidence or owner confirmation: ...
-- Do not change: decisions, constraints, or accepted risks that remain binding
-- Next review mode: Review-only / Rewrite / Delta review / Evidence-collection / Validation-evidence / Implementation-conformance
-- Paste this into the next agent or next round: ...
+**继续交接包**
+- 当前决策：通过 / 通过（带提示） / 有条件通过 / 需修改 / 阻塞
+- 打磨后评分：上一轮 <0-100> → 当前 <0-100>（限制分数的原因：...）
+- 实现许可：可以完整实现 / 只能跟踪提示项 / 只能做调研或验证 / 不能实现
+- 未解决阻塞项：B-...
+- 未解决主要问题：M-...
+- 未验证假设或证据缺口：A-... / E-...
+- 必需证据或负责人确认：...
+- 不要改变：仍然有效的决策、约束或已接受风险
+- 下一轮审查模式：仅审查 / 重写方案 / 增量复审 / 证据收集 / 验证证据审查 / 实现一致性审查
+- 给下一轮执行者的交接内容：...
 ```
 
 When reviewing an updated plan, check prior blockers and major findings before introducing new critique. Do not rename an unresolved issue to make it appear resolved.
@@ -257,7 +265,7 @@ Terminate the automatic loop and hand back to the user or a real owner when any 
 - two or more rounds produce no material change in the decision or the open blockers/majors;
 - the only way to "pass" would be to weaken a gate, downgrade an unresolved `Blocker`/`Major` without evidence, or force `Pass`.
 
-On termination, output the current decision, the exact open items, and a `Continuation Packet` so the next round or the owner can resume without losing state. Ending on `Revise`, `Blocked`, or `Pass under assumptions` with a clear packet is a valid, honest stopping point; forcing `Pass` is not.
+On termination, output the current decision, the exact open items, and a localized continuation packet so the next round or the owner can resume without losing state. Ending on `Revise`, `Blocked`, or `Pass under assumptions` with a clear packet is a valid, honest stopping point; forcing `Pass` is not.
 
 ## Output Policy
 
@@ -265,9 +273,9 @@ The primary audience is often a non-expert who cannot judge domain detail and is
 
 ### Plain-Language Verdict (always first)
 
-Keep this to a few short lines, in the user's language, with no unexplained jargon. Include the go/no-go answer, safe next action, forbidden action, biggest risk, any real owner or evidence confirmation needed, and a one-time gloss for any English decision label. Use the canonical verdict shape in `references/output-templates.md` when output structure matters.
+Keep this to a few short lines, in the user's language, with no unexplained jargon. Include the go/no-go answer, safe next action, forbidden action, biggest risk, any real owner or evidence confirmation needed, and the localized decision label. Use the canonical verdict shape in `references/output-templates.md` when output structure matters.
 
-After the verdict, include a compact `Next Review Plan` whenever the decision is `Revise`, `Blocked`, `Pass under assumptions`, or the user asks how to keep refining. It must name the highest-leverage refinement direction, evidence or owner confirmation needed, and next review mode. Derive it from open `Blocker`/`Major` findings, pass conditions, evidence gaps, or the refined plan; do not write generic advice such as "improve validation" without naming the concrete mechanism or artifact.
+After the verdict, include a compact next-review plan in the user's language whenever the decision is `Revise`, `Blocked`, `Pass under assumptions`, or the user asks how to keep refining. For Chinese output, title it `下一轮打磨计划`. It must name the highest-leverage refinement direction, evidence or owner confirmation needed, and next review mode. Derive it from open `Blocker`/`Major` findings, pass conditions, evidence gaps, or the refined plan; do not write generic advice such as "improve validation" without naming the concrete mechanism or artifact.
 
 Use the Implementation Readiness Score from `references/quality-gates.md` only for implementation-readiness, pass-like, revise/blocked, multi-round, or user-requested scoring decisions. Do not invent a second score, and never let a high score override an unresolved `Blocker` or `Major`.
 
@@ -307,5 +315,5 @@ Use compact output for low-risk plans. Use full output for high-risk, unfamiliar
 - For high-risk, unfamiliar-domain, repository-backed, pass-like, or implementation-conformance decisions, include review coverage and the biggest blind spot.
 - Do not present `Pass under assumptions` as permission for full implementation; state allowed and forbidden work explicitly.
 - For high-risk pass-like decisions, apply `references/falsification-gate.md`: pre-register the deadliest failure before deciding, attempt to disprove it with the cheapest real probe or an independent adversary, and do not issue absolute `Pass` on a kill-shot that was only argued, skipped, or left untestable; an untested kill-shot caps the decision at `Pass under assumptions`.
-- Lead non-expert-facing output with the plain-language verdict; do not bury the go/no-go decision or the implementation permission under gate tables, coverage tables, ledgers, or stress tests, and gloss each English decision label once in plain language.
+- Lead non-expert-facing output with the plain-language verdict; do not bury the go/no-go decision or the implementation permission under gate tables, coverage tables, ledgers, or stress tests, and make localized decision labels primary in user-facing text.
 - Do not omit the continuation packet when a review ends with open blockers, majors, assumptions, evidence gaps, owner confirmations, or the current response stops before absolute `Pass`.

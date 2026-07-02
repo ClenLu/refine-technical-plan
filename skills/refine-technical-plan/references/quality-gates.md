@@ -450,6 +450,8 @@ Include this score for high-risk, unfamiliar-domain, repository-backed, pass-lik
 
 Use these dimensions:
 
+When presenting this table to users, translate coverage areas and ratings into the user's language. For Chinese output, use 高 / 中 / 低 / 不适用 / 无 instead of English rating labels.
+
 | Coverage Area | Rating | Evidence / Gap | Decision Impact |
 | --- | --- | --- | --- |
 | Repository coverage | High / Medium / Low / N/A | inspected paths, commands, search terms, uninspected material areas |  |
@@ -496,9 +498,9 @@ Readiness should consider:
 
 ### Surfacing the Refined Score in the Conclusion
 
-This score is the single canonical measure of plan quality after refinement. Surface it in the plain-language verdict as the "refined score" (打磨后评分) so a non-expert gets a quick quality signal:
+This score is the single canonical measure of plan quality after refinement. Surface it in the plain-language verdict in the user's language so a non-expert gets a quick quality signal:
 
-- Show the current post-refinement score with confidence (Low/Medium/High).
+- Show the current post-refinement score with localized confidence labels, such as low / medium / high in English or 低 / 中 / 高 in Chinese.
 - When a prior-round score exists, show the before→after delta (打磨前 X → 打磨后 Y) to make the loop's value visible; carry the prior score in the review ledger and continuation packet.
 - Add one line naming what caps the score (the top unresolved blocker/major, missing evidence, or untested kill-shot).
 - Do not invent a second scale. Do not raise the score to justify a pass; the score follows the gates, not the reverse. A high number with an unresolved `Blocker`/`Major`, low review coverage, or an untested high-risk kill-shot is misleading and must be explained rather than shown alone.
