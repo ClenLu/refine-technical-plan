@@ -1,26 +1,24 @@
 # Refine Technical Plan
 
-Codex skill for hardening technical plans before implementation. It runs a simulated expert-panel workflow that reviews, rewrites, scores, and gates plans with a plain-language go/no-go conclusion, repository and external evidence checks, an approval state machine, and a refinement ledger that tracks risks until closure.
+Codex skill for hardening existing technical plans before implementation. It reviews and rewrites a user-provided plan, gives a plain-language start decision, and tells the user exactly what to add next when the plan is not ready.
 
-This skill is designed for users who may be relying on an agent outside their own domain and need protection from confident but weak plans, hidden technical debt, and unsupported "best practice" claims.
+This skill is designed for users who may be relying on an agent outside their own domain and need protection from confident but weak plans, hidden technical debt, unsupported "best practice" claims, and implementation drift from an already approved plan.
 
 ## What It Does
 
-- Reviews architecture, refactor, migration, integration, AI/agent, product, and implementation plans.
-- Chooses only the expert review lenses that matter for the actual risk area instead of applying a fixed checklist or placeholder panel.
-- Requires repository-aware evidence checks before pass-like or implementation-ready decisions when running inside a coding agent.
-- Checks current external technical facts against authoritative sources when plans depend on third-party APIs, SDKs, frameworks, cloud services, platform behavior, LLM APIs, security advisories, compliance rules, or provider contracts.
-- Starts with a plain-language conclusion so non-specialists can tell whether to start, pause, or add missing plan content.
-- Finds weak assumptions, hidden coupling, missing validation, rollback gaps, unclear ownership, and long-term debt risks.
-- Uses an approval state machine and refinement ledger to track risk status, evidence status, missing plan content, score caps, and pass conditions.
-- Scores implementation readiness from 0 to 100 and caps the score when high-risk assumptions, missing owner decisions, or blockers remain.
-- Runs a default first batch of up to three real refinement cycles. Each real cycle diagnoses the plan, rewrites or reshapes it, and gates the refined version.
-- Stops early on clear pass or blocker instead of narrating empty extra cycles.
-- Keeps the visible output proportional: the conclusion, score, next actions, state machine, and ledger stay required, while supporting sections shrink when they add little decision value.
-- Continues across later user updates until the plan reaches `Pass` / `通过` or becomes blocked on missing facts or decisions.
-- Checks implementation diffs against approved plans through implementation conformance review.
-- Reports review coverage and owner/SME escalation needs for high-risk, unfamiliar-domain, production, security, data, or compliance decisions.
-- Uses localized Chinese status labels such as `信息收集中`, `打磨中`, `等补充信息`, `基本通过，带小备注`, `通过`, and `卡住` when the user writes in Chinese.
+- Reviews architecture, refactor, migration, integration, AI/agent, product, and implementation plans that the user explicitly brings to the workflow.
+- Stays passive by design: it should not auto-trigger from every mention of a plan, architecture, migration, refactor, or technical debt.
+- Starts with a direct start decision: `可以开工`, `基本可以开工，但有小备注`, `暂缓开工，先修改方案`, or `缺关键输入，暂时不能判断`.
+- Always gives concrete next actions when the plan cannot clearly start, including whether the user must provide more information.
+- Produces an `优化后方案` that can replace or be merged into the original plan when refinement is useful.
+- Chooses only the expert review lenses that matter for the actual risk area instead of simulating a fixed expert panel.
+- Checks accessible repository context when it can affect the judgment, and says plainly when local evidence is missing.
+- Checks authoritative external sources when the plan depends on version-sensitive APIs, SDKs, frameworks, cloud behavior, provider guarantees, security guidance, compliance rules, or pricing.
+- Treats unchecked claims as assumptions or `待补证据`; it should not mark a plan ready to start when critical facts are unverified.
+- Uses risk-matched validation instead of a fixed test matrix.
+- Keeps ledgers compact by default; detailed ledgers are reserved for high-risk, repeated, accepted-risk, or user-requested traceability cases.
+- Does not use numeric readiness scores.
+- Supports implementation conformance review when the user provides an approved plan and implementation evidence.
 
 ## Installation
 
@@ -36,50 +34,73 @@ The installable skill lives under [`skills/refine-technical-plan/`](./skills/ref
 
 ## Usage
 
-This skill is intended to be actively invoked, not auto-triggered from broad plan-related wording alone.
-
-Ask Codex to use the skill explicitly when you have a plan, agent proposal, architecture idea, or PRD-to-engineering direction that needs hardening:
+This skill is intended to be explicitly invoked by the user after they already have a plan or agent-generated proposal:
 
 ```text
-Use $refine-technical-plan to automatically review, revise, document, and re-review this technical plan until it passes or reaches clear blockers.
+Use $refine-technical-plan to harden this existing technical plan. Tell me whether implementation can start, what I need to add next, and rewrite the plan if needed.
 ```
 
-You can provide a rough proposal, PRD, migration sketch, architecture idea, updated plan, approved plan, implementation diff, validation artifact, or an agent-generated plan that looks plausible but needs an independent risk review. The skill should inspect available repository context first and ask only for business, production, compliance, external-contract, operator, or owner facts that cannot reasonably be discovered.
-
-If the plan depends on unstable or versioned external facts, the skill should check current authoritative documentation before treating those claims as pass-worthy evidence.
-
-For Chinese workflows, prompts like this should trigger the full refinement loop:
+For Chinese workflows:
 
 ```text
-请用 $refine-technical-plan 帮我打磨这个 agent 方案，持续到专家团队说能通过为止。先用普通话告诉我能不能开工，再给出要补进方案里的内容。
+请用 $refine-technical-plan 帮我打磨这个 agent 方案。先告诉我能不能开工，再告诉我下一步要往方案里补什么；需要的话直接给优化后方案。
 ```
 
-To continue a previous review, provide the prior ledger or the changed plan content:
+To continue a previous review, provide the prior risk summary or changed plan content:
 
 ```text
-继续上一轮打磨。上一轮 R2 已补充回滚演练，但 R3 的成本和责任归属还没写进方案。请判断这一版是否通过。
+继续上一轮打磨。上一轮 R2 已补充回滚演练，但 R3 的成本和责任归属还没写进方案。请判断这一版是否可以开工。
 ```
 
-After implementation, ask it to compare the produced code, config, migration, prompt/tool, tests, docs, or deployment changes against the approved plan:
+After implementation, ask it to compare produced code, config, migration, prompt/tool, tests, docs, or deployment changes against the approved plan:
 
 ```text
 Use $refine-technical-plan to run implementation conformance review for this diff against the approved plan.
 ```
 
+## Expected Output
+
+Default plan-refinement output starts with:
+
+```markdown
+**结论**
+- 开工判断：可以开工 | 基本可以开工，但有小备注 | 暂缓开工，先修改方案 | 缺关键输入，暂时不能判断
+- 一句话原因：...
+- 下一步：...
+- 是否需要用户补充信息：是/否，...
+
+**下一步行动**
+1. 补充内容/决策/证据：...
+   为什么影响开工：...
+
+**优化后方案**
+...
+
+**依据与风险摘要**
+- 已检查证据：...
+- 关键假设：...
+- 本轮评审视角：...
+- 未关闭风险：...
+```
+
+The skill should omit sections that do not help the current decision. Quick go/no-go requests should stay short. High-risk or repeated reviews may include a detailed ledger after the action layer.
+
 ## Verification And Evals
 
 Regression prompts live in [`skills/refine-technical-plan/evals/evals.json`](./skills/refine-technical-plan/evals/evals.json). They cover:
 
+- explicit user invocation rather than broad auto-triggering;
+- direct start decisions without numeric scores;
+- next actions that tell the user what information, decision, evidence, or plan content is needed;
+- optimized plans that can be merged into the source plan;
+- ledger summaries and detailed ledgers only when traceability is useful;
 - agent overconfidence and unsupported "best practice" claims;
-- three-cycle refinement batches and continuation into later batches;
-- approval state machine and refinement ledger updates;
-- plain-language conclusions for non-specialists;
-- score caps, missing-plan-content handling, and pass/block decisions;
-- Chinese output labels and shareable plan language;
-- repository-aware evidence inspection when local context exists;
+- local repository evidence checks and honest missing-evidence handling;
 - authoritative external verification for version-sensitive claims;
-- plan-to-code conformance review against an approved plan;
-- proportional output when the user wants a quick go/no-go answer.
+- risk-matched validation and rejection of "用户反馈不错" as primary acceptance;
+- continuation of prior risk items across review rounds;
+- implementation conformance review against approved plan conditions;
+- proportional output for quick go/no-go prompts.
 
 This repository does not include a dedicated eval runner. Validate changes by installing the skill locally and running the bundled prompts through your normal Codex or skill-evaluation harness.
 
@@ -91,6 +112,7 @@ This repository is the install source for `npx skills add ClenLu/refine-technica
 
 ```text
 .
+├── CONTEXT.md
 ├── skills/
 │   └── refine-technical-plan/
 │       ├── SKILL.md

@@ -1,4 +1,4 @@
 interface:
   display_name: "Refine Technical Plan"
-  short_description: "Expert-panel review loop for technical plans"
-  default_prompt: "Use $refine-technical-plan to give a plain-language go/no-go conclusion, inspect repository context and authoritative external sources when relevant, choose only the review lenses that match the actual risk, polish the plan through up to 3 real refinement cycles by default with diagnosis + plan rewrite + final gate, stop early on clear pass or blocker, score implementation readiness, keep evidence claims honest, keep the output proportional rather than ritualized, and state whether another cycle or user-provided information is needed."
+  short_description: "Refines existing technical plans into safer start-ready plans"
+  default_prompt: "Use $refine-technical-plan on an existing technical plan only when the user asks for this workflow. Give a plain start decision, inspect repository context and authoritative external sources when they affect the judgment, choose only review lenses that match the real risk, provide concrete next actions when the plan cannot start, rewrite an optimized plan when useful, keep ledgers compact unless traceability is needed, do not use numeric scores, and state whether user-provided information is required."
