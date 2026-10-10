@@ -1,236 +1,76 @@
 ---
 name: refine-technical-plan
-description: Use when the user explicitly invokes `$refine-technical-plan` or clearly asks to apply this exact refinement workflow to an existing technical plan, agent-generated proposal, architecture/refactor/migration plan, or approved-plan implementation check. Do not auto-trigger from generic mentions of plans, architecture, refactors, migrations, technical debt, or agent proposals alone.
+description: Use when the user explicitly invokes `$refine-technical-plan` or clearly requests this workflow for an existing technical plan or approved-plan implementation check. Do not auto-trigger from generic planning, architecture, refactoring, or technical-debt discussions.
 ---
 
 # Refine Technical Plan
 
-Use this skill to turn an existing technical plan into a safer implementation-ready plan. The user decides when to invoke it; do not proactively apply it just because a conversation mentions planning, architecture, refactoring, migration, or technical debt.
+Help turn an existing technical plan into an executable, evidence-backed plan. Work as a technical collaborator: investigate uncertainties, test important assumptions, compare alternatives, and improve the plan before asking the user to fill gaps. The goal is useful progress toward implementation, with an honest decision about what can start.
 
-The skill exists for users who may be working outside their specialty and cannot easily judge whether an agent-generated plan is overconfident, under-evidenced, or likely to create preventable technical debt. The primary answer is always practical: whether implementation can start, and what must be added next if it cannot.
+## Scope And Initiative
 
-## Core Contract
+- Use the plan the user supplied or referenced. If it is unavailable, ask for it while investigating any relevant context already accessible.
+- Preserve the user's objective and useful decisions; challenge the approach when evidence suggests a better way to meet that objective.
+- Plan refinement includes reading code and documentation, tracing dependencies, running relevant existing checks, and writing temporary probes or prototypes in isolated local locations. Use these capabilities when they can resolve a material uncertainty; do not stop at recommending an investigation you can perform.
+- Keep experiments separate from production implementation. Preserve user changes, identify artifacts you create, and report their location and disposition. Modify application code, commit changes, deploy, or affect external state only within the user's authorized scope. Refinement alone does not authorize shipping the proposed solution.
+- Follow the user's time, cost, network, and tooling constraints. Prefer inexpensive, reversible checks; ask before an action requiring unavailable permissions, credentials, consequential spending, or an irreversible change. Continue independent work while waiting.
 
-- Review an existing plan; do not invent a plan when the user has not supplied one.
-- Default to refining documents and plans. Write implementation code only when the user explicitly asks for code.
-- Prefer an optimized plan body the user can merge into the original plan over a long critique-only report.
-- Always include next actions when the plan cannot clearly start. The user should know exactly what information, decision, evidence, or plan content is needed next.
-- Do not use numeric scores. Use a plain start decision and concrete blockers instead.
-- Keep visible status labels minimal. Avoid detailed state-machine output by default.
+## Working Method
 
-## Modes
+1. **Find the decision that matters.** Identify the goal, constraints, and uncertainties most likely to change the design or prevent implementation. Select relevant architecture, domain, implementation, security, reliability, product, or state perspectives as needed; expert roleplay adds no evidence.
+2. **Resolve what you can.** Inspect accessible repository context and authoritative external sources. Run focused checks or isolated experiments when documentation alone cannot settle the question. Compare alternatives when they could improve correctness, complexity, cost, or operability.
+3. **Integrate the result.** Rewrite the relevant plan sections, including concrete boundaries, sequencing, acceptance criteria, and tradeoffs. Record what the investigation changed, rather than leaving solved issues as requests to the user.
+4. **Reassess remaining uncertainty.** Continue while a useful next action can materially improve the plan within the task's scope and budget. Stop when the plan supports the intended next stage, an external prerequisite blocks all remaining useful work, or further investigation has little decision value. There is no fixed number of review cycles.
 
-Choose the mode from the user's request:
+Ask only for facts or decisions you cannot reasonably obtain: business priorities, production constraints, risk acceptance, ownership authority, credentials, or access. State what the answer changes. Missing input should block only the work that depends on it.
 
-1. `方案打磨`: default when the user asks to polish, refine, review, stress-test, or improve an existing technical plan.
-2. `快速把关`: use when the user mainly asks whether the plan can start or wants a brief go/no-go answer. Keep detail compact, but do not weaken the approval standard.
-3. `实现对照审查`: use only when the user provides or references an approved plan plus implementation evidence such as diff, config, migration, prompt/tool change, rollout steps, or deployment output. Compare implementation against the approved plan instead of re-opening the full plan discussion.
+## Evidence And Experiments
 
-If modes overlap, choose the one that best protects the decision. A high-risk migration can get a compact answer, but blockers still need to be visible.
+Choose evidence according to the uncertainty:
 
-## Evidence First
+- **Boundaries and behavior:** trace real callers, contracts, state ownership, and failure paths; run relevant existing tests.
+- **Version-sensitive support:** check the installed or proposed version against official documentation, release notes, or provider guarantees. Test a minimal call when accessible and useful.
+- **Performance or complexity:** compare representative alternatives with a bounded benchmark or prototype; describe workload and measurement limitations.
+- **Migration and rollback:** use synthetic data or a disposable local copy to exercise restartability, compatibility, reconciliation, and recovery. Never treat a local rehearsal as proof of production readiness.
 
-Before judging a plan, collect only the evidence that can affect the decision:
+Use the questions in [review-rubric.md](references/review-rubric.md) when the risk warrants deeper investigation. They are prompts for choosing work, not mandatory sections or a universal checklist.
 
-1. Check accessible local context when relevant: repository files, docs, previous plans, tests, configs, schemas, API contracts, package versions, and code paths.
-2. If no useful local evidence is available, say that plainly. Do not imply code or production context was inspected.
-3. Check authoritative external sources when the pass decision depends on versioned or unstable facts: framework behavior, SDK/API support, cloud limits, provider guarantees, pricing, security guidance, standards, compliance rules, or release status.
-4. Treat unchecked claims as assumptions or `待补证据`, not facts. A plan cannot be marked ready to start when its critical recommendation depends on unverified local or external facts.
+Distinguish inspected facts, measured results, assumptions, and unverified claims. Cite relevant file paths, versions, sources, or commands and outcomes. Report failed, skipped, and unrun checks honestly. Neither confident wording, "best practice", nor an agent's own rewrite verifies a critical assumption. If tools or context are unavailable, explain the precise limitation and still complete useful independent analysis.
 
-Ask the user only for information that cannot reasonably be discovered from available files or authoritative sources, and ask for the smallest concrete addition needed.
+## Readiness
 
-## Review Lenses
+Judge readiness for the intended next stage, not for every eventual production activity. A reversible prototype can begin while deployment decisions remain open if its boundary, purpose, and stop conditions are clear. Do not let unrelated checklist items block low-risk work.
 
-Use expert roles as internal review lenses, not as roleplay. Select only lenses that expose a concrete risk, tradeoff, rewrite, or pass condition.
+Use plain language, normally:
 
-Common lenses:
+- `可以开工`: the intended stage has clear boundaries, credible validation, and resolved or explicitly accepted material risks.
+- `基本可以开工，但有小备注`: only low-risk, non-blocking follow-up remains.
+- `暂缓开工，先修改方案`: material design or validation problems remain after useful investigation.
+- `缺关键输入，暂时不能判断`: essential facts, access, or decisions remain unavailable.
 
-- Architecture: boundaries, coupling, contracts, evolution path, rollback.
-- Domain: correctness, invariants, edge cases, standards, current best practice when verified.
-- Implementation: sequencing, ownership, complexity, testability, maintainability.
-- Reliability/security: failure modes, privacy, permissions, abuse cases, observability, incident response.
-- Product/operations: user impact, rollout, support burden, ownership, cleanup.
-- State/platform: persistence, compatibility, migration safety, cost, performance, scaling.
+Name which stage is ready and which is still blocked. Risk acceptance must come from an authorized decision-maker, with consequences, affected scope, ownership, validation, and mitigation or exit conditions proportional to the risk. Do not invent acceptance or infer it from silence. Avoid numeric readiness scores.
 
-In visible output, mention only lenses that changed the judgment. Avoid placeholder expert lists and simulated expert dialogue.
+## Deliverables
 
-## Start Decision
+Lead with the decision and its reason. Then provide what helps the user move forward:
 
-Use the user's language. In Chinese, default to these labels:
+- **Work completed:** important evidence obtained, experiments and their outcomes, or alternatives ruled out. Keep this compact and explicit about limitations.
+- **Optimized plan:** provide a replacement or mergeable revision when the user asks for refinement or a rewrite is useful. Make it understandable without the conversation. Include only relevant goal, boundary, design, stages, validation, recovery, operations, and open-decision content; keep review mechanics outside the plan body.
+- **Remaining actions:** prioritize the immediate blockers, explain why they matter, and identify whether the agent or user can resolve each. A short list is usually enough; do not hide blockers to meet a numerical limit.
+- **Evidence and risk summary:** include material assumptions and unresolved risks when they affect the decision.
 
-- `可以开工`: material risks are resolved or explicitly accepted with credible ownership and validation.
-- `基本可以开工，但有小备注`: only low-risk, owned, non-blocking cleanup remains.
-- `暂缓开工，先修改方案`: the plan has unresolved risks, unclear boundaries, weak validation, unsafe migration, or likely long-lived debt.
-- `缺关键输入，暂时不能判断`: responsible judgment would require guessing about facts, decisions, artifacts, or authority that are unavailable.
+For `快速把关`, keep the investigation and answer proportional to the requested time and risk; do not weaken evidence standards or expand into unnecessary rewrites. No fixed report template is required.
 
-Keep these labels as the main decision interface. Do not replace them with scores or a complex approval state machine.
+## Continuation
 
-## Approval Standard
+Reuse prior risk IDs and update their evidence and resolution. Keep a compact visible handoff of material open items when context may be lost; do not rely on an invisible ledger persisting across sessions.
 
-Say a plan can start only when the relevant items below are true:
-
-- Scope is explicit: changed scope, unchanged scope, deferred work, and out-of-scope work are named when they affect risk.
-- Architecture boundaries are clear: ownership, dependencies, public contracts, data flow, and state ownership are named.
-- Evidence is honest: local facts and external technical claims are verified or clearly marked as assumptions.
-- Migration is safe when relevant: rollout, compatibility, rollback, data/config cleanup, and dual-running risks are covered.
-- Validation matches risk: high-risk changes have concrete tests, rollout signals, rollback checks, data checks, permission checks, observability, or acceptance criteria.
-- Debt is controlled: shortcuts are deliberate, bounded, owned, and have removal triggers.
-- Operations are realistic: deploy, monitor, support, incident response, and cleanup ownership are named when production impact exists.
-- The optimized plan can be executed by an engineer who did not read the full conversation.
-
-Accepted risk closes an item only when the plan states the consequence, affected scope, owner, trigger condition, exit or cleanup condition, and validation condition. Otherwise keep it in next actions or the ledger summary.
-
-## Refinement Loop
-
-Run one real refinement cycle by default. A real cycle materially changes the critique, optimized plan, start decision, pass condition, or next actions.
-
-In one response, continue up to three real cycles only when each additional cycle can reduce risk using available context. Do not narrate empty cycles to satisfy a template. Across the conversation, keep refining until the plan can start or until missing input blocks responsible judgment.
-
-Each real cycle:
-
-1. Diagnose the plan: identify the biggest failure modes, missing facts, weak assumptions, and whether the plan is solving the right problem.
-2. Improve the plan: preserve good decisions, remove weak or obsolete text, and rewrite the plan when that is the clearest way to close risks.
-3. Gate the result: give the start decision, next actions, and any remaining risks or assumptions.
-
-When key business, production, security, compliance, migration, vendor-contract, or ownership input is missing, you may still produce an assumption-bound optimized plan. Do not mark it ready to start until the blocking input is supplied or explicitly accepted with consequence and ownership.
-
-## Next Actions
-
-`下一步行动` is required whenever the decision is not `可以开工`.
-
-Rules:
-
-- Put next actions before detailed evidence or ledger material.
-- List at most three immediate actions.
-- Phrase actions as plan content to add, decisions to record, or evidence to verify.
-- For each action, explain why it affects whether the plan can start.
-- Say whether the user must provide information, or whether the assistant can continue from available context.
-- Avoid vague advice like "add tests", "improve monitoring", or "provide more context". Name the specific validation, signal, owner, decision, artifact, or source of truth.
-
-## Optimized Plan
-
-Default to outputting `优化后方案` when the user asks for 打磨/优化, when the source plan is unsafe enough that a rewrite is the clearest fix, or when a refined plan would let the user move forward.
-
-The optimized plan should be shareable technical-document content. Keep review mechanics outside it.
-
-Use only sections that earn their place:
-
-- `目标`
-- `非目标`: include when scope control matters, especially for refactors, migrations, platformization, new dependencies, or broad "Common/Engine/Pipeline" proposals.
-- `核心方案`
-- `实施阶段`
-- `验证与验收`
-- `风险与回滚`
-- `运维与观测`
-- `待定事项`
-
-If the plan is blocked on missing input, include the assumption-bound version only when useful, and keep unresolved items in `待定事项` or `下一步行动`.
-
-## Ledger And Continuation
-
-Maintain a compact refinement ledger internally across repeated reviews. Use stable IDs from prior user-supplied ledgers when available.
-
-Default visible output is a short `风险摘要`, not a full ledger. Expand to a detailed ledger only when:
-
-- the plan is high-risk;
-- the review continues across multiple rounds and prior issues must be tracked;
-- risk is explicitly accepted;
-- the user asks for full traceability or 复查依据.
-
-When shown, the ledger should track material risks without numeric score fields:
-
-| 编号 | 问题 | 影响 | 证据状态 | 严重程度 | 处理状态 | 待补方案内容 | 通过条件 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-
-Use Chinese labels when the user writes Chinese:
-
-- Evidence: `已验证`, `方案已写明`, `暂按假设`, `缺证据`, `未检查`
-- Severity: `卡住`, `高`, `中`, `低`
-- Handling: `未解决`, `部分解决`, `已解决`, `待补充`, `已接受风险`, `已被替代`
-
-Do not output a separate detailed approval state machine by default.
-
-## Agent Plan Calibration
-
-When reviewing agent-generated plans, actively challenge confident claims that hide missing evidence.
-
-Keep these open as assumptions, next actions, or ledger items until the plan supplies evidence, boundaries, ownership, or accepted-risk text:
-
-- "最佳实践", "成熟团队都这么做", "最新版稳定支持", or similar unsupported claims.
-- Full rollout first, one-shot migration, or "上线后再补" monitoring, permissions, cost controls, runbooks, or rollback.
-- Rollback that only covers code while data, configuration, external state, prompts, tools, or provider-side changes remain mutated.
-- Validation based on "用户反馈不错", "看起来没问题", or other non-verifiable acceptance criteria.
-- Broad `Common`, `Engine`, `Pipeline`, platform, or middleware layers that absorb unrelated responsibilities mainly for "统一" or "省心".
-- No evidence from the current repository, current versions, provider limits, operational owner, or production constraints.
+Use a detailed ledger only when traceability helps a high-risk or repeated review, accepted risk, or a user request. Choose fields that carry the necessary information, such as issue, impact, evidence, owner, status, and resolution condition.
 
 ## Implementation Conformance Review
 
-Use this secondary mode only when comparing implementation evidence against an approved plan or prior pass conditions.
+When the user provides an approved plan and implementation evidence, compare the two rather than reopening settled design decisions. Inspect diffs and relevant checks where available. Identify skipped rollout stages, removed compatibility windows, missing rollback or validation, and weakened security, observability, or cost controls.
 
-Do not re-litigate the whole plan by default. Check for plan drift:
-
-- approved compatibility windows removed or shortened;
-- rollout stages skipped;
-- rollback, migration, cleanup, or validation omitted;
-- permissions, audit, security, observability, or cost controls weakened;
-- implementation takes shortcuts that bypass accepted risk conditions.
-
-Output shape:
-
-```markdown
-**结论**
-- 开工判断：可以合并 | 暂缓合并，先修正 | 缺证据，暂时不能判断
-- 一句话原因：...
-- 下一步：...
-
-**下一步行动**
-1. ...
-
-**实现对照审查**
-| 已批准条件 | 当前实现证据 | 判断 | 影响 | 修正要求 |
-| --- | --- | --- | --- | --- |
-| ... | ... | 符合/偏离/缺证据 | ... | ... |
-
-**计划漂移**
-- ...
-```
-
-## Default Output Shape
-
-For plan refinement:
-
-```markdown
-**结论**
-- 开工判断：可以开工 | 基本可以开工，但有小备注 | 暂缓开工，先修改方案 | 缺关键输入，暂时不能判断
-- 一句话原因：...
-- 下一步：...
-- 是否需要用户补充信息：是/否，...
-
-**下一步行动**
-1. 补充内容/决策/证据：...
-   为什么影响开工：...
-
-**优化后方案**
-[Only when rewritten or useful]
-
-**依据与风险摘要**
-- 已检查证据：...
-- 关键假设：...
-- 本轮评审视角：...
-- 未关闭风险：...
-```
-
-Required in every review: `结论`. Required unless the plan can clearly start with no meaningful follow-up: `下一步行动`. Add `优化后方案` when the plan was actually rewritten or the user asked for refinement. Add `依据与风险摘要` when evidence or assumptions affect the decision.
-
-Keep the output proportional. Quick go/no-go answers should stay short. High-risk or repeated reviews may include a detailed ledger after the action layer.
-
-## Review Quality Rules
-
-- Be concrete: tie each concern to a failure mode, code area, user impact, migration hazard, operational burden, or maintenance cost.
-- Problem fit first: if the plan solves the wrong problem, say so and reshape the target.
-- Risk-resolving detail only: add detail when it reduces a named risk.
-- Preserve useful work: keep decisions that survive review; remove obsolete or unsafe text.
-- Track prior issues across cycles: say whether prior concerns are `已解决`, `部分解决`, `仍未解决`, or `待补充`.
-- Use `references/review-rubric.md` when the plan has meaningful architecture, refactoring, integration, state, security, reliability, rollout, or operational risk; when the user asks for top-expert review; or when repeated cycles need sharper pass/fail criteria.
+Lead with `可以合并`, `暂缓合并，先修正`, or `缺证据，暂时不能判断`. Show material approved conditions, implementation evidence, deviations, and corrective actions; use a table when it helps. Investigate apparent deviations before concluding, and propose justified plan amendments when new evidence warrants them. Do not silently waive approved conditions or change the implementation without authorization.
 
 Use `agents/openai.yaml` as interface metadata.

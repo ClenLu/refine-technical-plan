@@ -1,24 +1,18 @@
 # Refine Technical Plan
 
-Codex skill for hardening existing technical plans before implementation. It reviews and rewrites a user-provided plan, gives a plain-language start decision, and tells the user exactly what to add next when the plan is not ready.
+Codex skill for turning existing technical plans into executable, evidence-backed plans. It investigates uncertainties, runs focused isolated checks when useful, compares alternatives, and incorporates findings into a revised plan with a plain-language readiness decision.
 
 This skill is designed for users who may be relying on an agent outside their own domain and need protection from confident but weak plans, hidden technical debt, unsupported "best practice" claims, and implementation drift from an already approved plan.
 
 ## What It Does
 
-- Reviews architecture, refactor, migration, integration, AI/agent, product, and implementation plans that the user explicitly brings to the workflow.
-- Stays passive by design: it should not auto-trigger from every mention of a plan, architecture, migration, refactor, or technical debt.
-- Starts with a direct start decision: `可以开工`, `基本可以开工，但有小备注`, `暂缓开工，先修改方案`, or `缺关键输入，暂时不能判断`.
-- Always gives concrete next actions when the plan cannot clearly start, including whether the user must provide more information.
-- Produces an `优化后方案` that can replace or be merged into the original plan when refinement is useful.
-- Chooses only the expert review lenses that matter for the actual risk area instead of simulating a fixed expert panel.
-- Checks accessible repository context when it can affect the judgment, and says plainly when local evidence is missing.
-- Checks authoritative external sources when the plan depends on version-sensitive APIs, SDKs, frameworks, cloud behavior, provider guarantees, security guidance, compliance rules, or pricing.
-- Treats unchecked claims as assumptions or `待补证据`; it should not mark a plan ready to start when critical facts are unverified.
-- Uses risk-matched validation instead of a fixed test matrix.
-- Keeps ledgers compact by default; detailed ledgers are reserved for high-risk, repeated, accepted-risk, or user-requested traceability cases.
-- Does not use numeric readiness scores.
-- Supports implementation conformance review when the user provides an approved plan and implementation evidence.
+- Investigates material uncertainties through repository inspection, authoritative sources, existing tests, and isolated experiments.
+- Compares alternatives and produces an improved plan the user can merge into the original.
+- Gives a readiness decision for the intended stage, separating prototype work from production rollout.
+- Identifies remaining blockers and who can resolve them, with compact risk tracking across reviews.
+- Checks implementation against approved plan conditions when requested.
+
+The skill requires intentional invocation. Investigation follows the user's scope and budget; production implementation and external changes require authorization.
 
 ## Installation
 
@@ -37,13 +31,13 @@ The installable skill lives under [`skills/refine-technical-plan/`](./skills/ref
 This skill is intended to be explicitly invoked by the user after they already have a plan or agent-generated proposal:
 
 ```text
-Use $refine-technical-plan to harden this existing technical plan. Tell me whether implementation can start, what I need to add next, and rewrite the plan if needed.
+Use $refine-technical-plan to investigate and improve this existing technical plan. Resolve what you can through code, documentation, and focused experiments; incorporate the findings and tell me which stage can start.
 ```
 
 For Chinese workflows:
 
 ```text
-请用 $refine-technical-plan 帮我打磨这个 agent 方案。先告诉我能不能开工，再告诉我下一步要往方案里补什么；需要的话直接给优化后方案。
+请用 $refine-technical-plan 帮我打磨这个 agent 方案。能自己查清或实验验证的问题先做，把结果融进优化方案，再告诉我哪个阶段能开工，以及还需要我决定什么。
 ```
 
 To continue a previous review, provide the prior risk summary or changed plan content:
@@ -60,49 +54,15 @@ Use $refine-technical-plan to run implementation conformance review for this dif
 
 ## Expected Output
 
-Default plan-refinement output starts with:
+The answer leads with a readiness decision and its reason. For a refinement request, it normally includes the improved plan, important investigation results, and remaining actions with an explicit agent/user responsibility. It distinguishes measured results, assumptions, and checks that were not run.
 
-```markdown
-**结论**
-- 开工判断：可以开工 | 基本可以开工，但有小备注 | 暂缓开工，先修改方案 | 缺关键输入，暂时不能判断
-- 一句话原因：...
-- 下一步：...
-- 是否需要用户补充信息：是/否，...
-
-**下一步行动**
-1. 补充内容/决策/证据：...
-   为什么影响开工：...
-
-**优化后方案**
-...
-
-**依据与风险摘要**
-- 已检查证据：...
-- 关键假设：...
-- 本轮评审视角：...
-- 未关闭风险：...
-```
-
-The skill should omit sections that do not help the current decision. Quick go/no-go requests should stay short. High-risk or repeated reviews may include a detailed ledger after the action layer.
+There is no mandatory report template, fixed review-cycle count, or fixed action count. Quick go/no-go requests stay brief. High-risk or repeated reviews include enough evidence and a visible risk handoff to preserve traceability. The revised plan is shareable document content, separate from review mechanics.
 
 ## Verification And Evals
 
-Regression prompts live in [`skills/refine-technical-plan/evals/evals.json`](./skills/refine-technical-plan/evals/evals.json). They cover:
+Regression prompts live in [`skills/refine-technical-plan/evals/evals.json`](./skills/refine-technical-plan/evals/evals.json). They cover invocation, evidence honesty, active investigation, plan revision, continuation, implementation conformance, isolated experiments, stage-specific readiness, and proportional effort.
 
-- explicit user invocation rather than broad auto-triggering;
-- direct start decisions without numeric scores;
-- next actions that tell the user what information, decision, evidence, or plan content is needed;
-- optimized plans that can be merged into the source plan;
-- ledger summaries and detailed ledgers only when traceability is useful;
-- agent overconfidence and unsupported "best practice" claims;
-- local repository evidence checks and honest missing-evidence handling;
-- authoritative external verification for version-sensitive claims;
-- risk-matched validation and rejection of "用户反馈不错" as primary acceptance;
-- continuation of prior risk items across review rounds;
-- implementation conformance review against approved plan conditions;
-- proportional output for quick go/no-go prompts.
-
-This repository does not include a dedicated eval runner. Validate changes by installing the skill locally and running the bundled prompts through your normal Codex or skill-evaluation harness.
+This repository does not include a dedicated eval runner. Validate changes by installing the skill locally and running the bundled prompts through your normal Codex or skill-evaluation harness. For tool-use scenarios, supply the stated fixtures and inspect tool traces and artifact locations alongside the answer; a plausible written response alone does not establish that an experiment ran.
 
 ## Publishing
 

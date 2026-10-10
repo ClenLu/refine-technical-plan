@@ -1,4 +1,4 @@
 interface:
   display_name: "Refine Technical Plan"
-  short_description: "Refines existing technical plans into safer start-ready plans"
-  default_prompt: "Use $refine-technical-plan on an existing technical plan only when the user asks for this workflow. Give a plain start decision, inspect repository context and authoritative external sources when they affect the judgment, choose only review lenses that match the real risk, provide concrete next actions when the plan cannot start, rewrite an optimized plan when useful, keep ledgers compact unless traceability is needed, do not use numeric scores, and state whether user-provided information is required."
+  short_description: "Investigates and improves technical plans toward implementation"
+  default_prompt: "Use $refine-technical-plan to investigate and improve my existing plan. Resolve material uncertainties with available evidence and focused isolated experiments, incorporate the findings, and tell me which stage can start and what still needs my input."
